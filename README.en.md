@@ -2,7 +2,7 @@
 
 A Swift tutorial repository for learners.
 
-This repository is designed for reading tutorials, exploring example projects, and practicing with exercises while learning Swift. The content is organized in Chinese and English, while demo project code is shared across languages.
+This repository is designed for reading tutorials, exploring example projects, and practicing with exercises while learning Swift.
 
 ## Who This Repository Is For
 

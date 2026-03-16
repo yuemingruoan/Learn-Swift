@@ -4,8 +4,8 @@
 
 - 前置章节：[01. 环境搭建](./01-environment-setup.md)、[02. Git 基础与拉取项目](./02-git-basics.md)
 - 上一章：[02. Git 基础与拉取项目](./02-git-basics.md)
-- 建议下一章：后续 Swift 基础语法章节（待补充）
-- 下一章：后续 Swift 基础语法章节（待补充）
+- 建议下一章：[04. 打印 Hello World](./04-hello-world.md)
+- 下一章：[04. 打印 Hello World](./04-hello-world.md)
 - 适合谁先读：已经完成环境准备并成功拉取课程项目的读者
 
 ## 本章目标

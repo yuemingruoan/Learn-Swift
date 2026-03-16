@@ -4,8 +4,8 @@
 
 - 前置章节：[01. 环境搭建](./01-environment-setup.md)、[02. Git 基础与拉取项目](./02-git-basics.md)、[03. Xcode 基础使用](./03-xcode-basics.md)
 - 上一章：[03. Xcode 基础使用](./03-xcode-basics.md)
-- 建议下一章：后续 Swift 基础语法章节（待补充）
-- 下一章：后续 Swift 基础语法章节（待补充）
+- 建议下一章：[05. 变量、常量与最基本的数据类型](./05-variables-and-constants.md)
+- 下一章：[05. 变量、常量与最基本的数据类型](./05-variables-and-constants.md)
 - 适合谁先读：已经会打开并运行 Xcode 项目的读者
 
 ## 本章目标

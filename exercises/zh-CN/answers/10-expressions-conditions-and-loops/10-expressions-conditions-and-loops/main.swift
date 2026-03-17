@@ -76,25 +76,23 @@ for fre_now in 1...frequency {
 }
 
 //获取及格率
-//当前并未教过获取特定位数小数的方法，因此需要你们自己编写一个，考验对类型和运算符的掌握程序
-var pass_rate_temp_1:Double = Double(pass_num) / Double(frequency) * 100 //先得到百分数，例如 66.6666
-var pass_rate_temp_2:Double = pass_rate_temp_1 * 10 //把要保留的一位小数放大到整数部分，例如 666.666
-var pass_rate_temp_3:Int = Int(pass_rate_temp_2) //先截取整数部分，例如 666
-var pass_rate_temp_4:Double = pass_rate_temp_2 - Double(pass_rate_temp_3) //取出下一位小数对应的小数部分，例如 0.666
-if pass_rate_temp_4 >= 0.5 {
-    pass_rate_temp_3 += 1 //进位，此时值为667
+//只需要保留一位小数时，可以直接看第二位小数要不要进位
+var pass_rate_temp_1:Double = Double(pass_num) / Double(frequency) * 100 //先得到原始百分数，例如 66.6666
+var pass_rate_temp_2:Int = Int(pass_rate_temp_1 * 10) //把第一位小数挪到整数部分，例如 666
+var pass_rate_temp_3:Int = Int(pass_rate_temp_1 * 100) % 10 //直接取第二位小数，例如 6
+if pass_rate_temp_3 >= 5 {
+    pass_rate_temp_2 += 1 //如果第二位小数大于等于5，就对第一位小数进位
 }
-pass_rate = Double(pass_rate_temp_3) / 10 //还原小数点，此时值为66.7，得到答案
+pass_rate = Double(pass_rate_temp_2) / 10 //还原小数点，此时值为66.7，得到答案
 
 //获取平均分（同理）
 var average_temp:Double = Double(score_sum)/Double(frequency)
-var average_temp_2:Double = average_temp * 10
-var average_temp_3:Int = Int(average_temp_2)
-var average_temp_4:Double = average_temp_2 - Double(average_temp_3)
-if average_temp_4 >= 0.5 {
-    average_temp_3 += 1
+var average_temp_2:Int = Int(average_temp * 10)
+var average_temp_3:Int = Int(average_temp * 100) % 10
+if average_temp_3 >= 5 {
+    average_temp_2 += 1
 }
-average = Double(average_temp_3) / 10
+average = Double(average_temp_2) / 10
 
 //打印最终结果
 print("学生姓名：",name)

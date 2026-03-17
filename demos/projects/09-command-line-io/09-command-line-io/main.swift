@@ -14,13 +14,18 @@ print("Hello, Swift")
 
 let courseName = "命令行输入与输出"
 let chapterNumber = 9
+let rate = 80.0
 print("当前章节是：", chapterNumber)
 print("当前主题是：", courseName)
+print("使用多个参数输出及格率：", rate, "%")
+print("使用字符串插值输出及格率：\(rate)%")
 /*
 *   预期输出：
 *   Hello, Swift
 *   当前章节是： 9
 *   当前主题是： 命令行输入与输出
+*   使用多个参数输出及格率： 80.0 %
+*   使用字符串插值输出及格率：80.0%
 */
 
 print("---------") // 手动分割线

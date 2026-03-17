@@ -4,8 +4,8 @@
 
 - 前置章节：[06. 变量、常量与最基本的数据类型](./06-variables-and-constants.md)、[07. 显式类型声明与最基本的类型转换](./07-explicit-types-and-conversion.md)、[09. 命令行输入与输出](./09-command-line-io.md)
 - 上一章：[09. 命令行输入与输出](./09-command-line-io.md)
-- 建议下一章：11. 函数与代码复用（待补充）
-- 下一章：11. 函数与代码复用（待补充）
+- 建议下一章：[11. 思考题解析：命令行成绩录入程序](./11-thought-problem-analysis.md)
+- 下一章：[11. 思考题解析：命令行成绩录入程序](./11-thought-problem-analysis.md)
 - 适合谁先读：已经会做最基础命令行输入输出，准备让程序根据不同情况执行不同逻辑的读者
 
 ## 本章目标

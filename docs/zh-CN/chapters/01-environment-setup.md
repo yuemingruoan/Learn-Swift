@@ -131,7 +131,7 @@ shiyu@MacBook-Pro ~ % xcode-select -p
 /Applications/Xcode.app/Contents/Developer
 ```
 
-如果你的机器上已经卸载了 Xcode，但仍然保留了独立安装的命令行工具，那么也可能看到下面这样的输出：
+如果你的机器上没有安装`Xcode`，但安装了独立安装的命令行工具，那么也可能看到下面这样的输出：
 
 ```bash
 shiyu@MacBook-Pro ~ % xcode-select -p

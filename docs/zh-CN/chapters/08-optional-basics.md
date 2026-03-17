@@ -4,8 +4,8 @@
 
 - 前置章节：[01. 环境搭建](./01-environment-setup.md)、[06. 变量、常量与最基本的数据类型](./06-variables-and-constants.md)、[07. 显式类型声明与最基本的类型转换](./07-explicit-types-and-conversion.md)
 - 上一章：[07. 显式类型声明与最基本的类型转换](./07-explicit-types-and-conversion.md)
-- 建议下一章：09. 命令行输入与输出（待补充）
-- 下一章：09. 命令行输入与输出（待补充）
+- 建议下一章：[09. 命令行输入与输出](./09-command-line-io.md)
+- 下一章：[09. 命令行输入与输出](./09-command-line-io.md)
 - 适合谁先读：已经理解基础类型，现在准备开始接触命令行输入的读者
 
 ## 本章目标

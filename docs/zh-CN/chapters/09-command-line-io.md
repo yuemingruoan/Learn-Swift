@@ -4,8 +4,8 @@
 
 - 前置章节：[01. 环境搭建](./01-environment-setup.md)、[08. Optional 入门](./08-optional-basics.md)
 - 上一章：[08. Optional 入门](./08-optional-basics.md)
-- 建议下一章：10. 表达式、条件判断与简单交互（待补充）
-- 下一章：10. 表达式、条件判断与简单交互（待补充）
+- 建议下一章：[10. 表达式、条件判断与循环](./10-expressions-conditions-and-loops.md)
+- 下一章：[10. 表达式、条件判断与循环](./10-expressions-conditions-and-loops.md)
 - 适合谁先读：已经理解 Optional，准备让程序开始和用户做最基础交互的读者
 
 ## 本章目标

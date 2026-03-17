@@ -4,8 +4,8 @@
 
 - 前置章节：[01. 环境搭建](./01-environment-setup.md)、[04. 打印 Hello World](./04-hello-world.md)、[06. 变量、常量与最基本的数据类型](./06-variables-and-constants.md)
 - 上一章：[06. 变量、常量与最基本的数据类型](./06-variables-and-constants.md)
-- 建议下一章：后续表达式与字符串插值章节（待补充）
-- 下一章：后续表达式与字符串插值章节（待补充）
+- 建议下一章：[08. Optional 入门](./08-optional-basics.md)
+- 下一章：[08. Optional 入门](./08-optional-basics.md)
 - 适合谁先读：已经看完第六章，或已经具备基础语法概念、现在想补齐 Swift 类型规则的读者
 
 ## 本章目标

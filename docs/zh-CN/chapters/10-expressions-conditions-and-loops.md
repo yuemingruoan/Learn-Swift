@@ -933,3 +933,4 @@ if let text = readLine() {
 
 如果你没有做出来，可以再去复习一下前面的章节哦，而不是着急进入下一章
 
+另外，参考答案位于`exercises/zh-CN/answers/10-expressions-conditions-and-loops`如果你已经完成了这道题，或者实在想不出来答案，可以去看一看，里面附加了解析

@@ -4,8 +4,8 @@
 
 - 前置章节：[01. 环境搭建](./01-environment-setup.md)、[02. Git 基础与拉取项目](./02-git-basics.md)、[03. Xcode 基础使用](./03-xcode-basics.md)
 - 上一章：[03. Xcode 基础使用](./03-xcode-basics.md)
-- 建议下一章：[05. 变量、常量与最基本的数据类型](./05-variables-and-constants.md)
-- 下一章：[05. 变量、常量与最基本的数据类型](./05-variables-and-constants.md)
+- 建议下一章：[05. Swift 通用语法速览](./05-swift-syntax-quick-start.md)
+- 下一章：[05. Swift 通用语法速览](./05-swift-syntax-quick-start.md)
 - 适合谁先读：已经会打开并运行 Xcode 项目的读者
 
 ## 本章目标
@@ -418,6 +418,18 @@ print("Hello, World!")
 - `print("Hello, World!")` 是用来验证程序入口和输出是否正常的最基础示例
 
 从这一章开始，你就正式看懂并运行了自己的第一段 Swift 控制台代码。
+
+## 接下来怎么读
+
+从这一章开始，后面的内容分成两种阅读方式：
+
+- 如果你已经写过其它编程语言，建议先看[05. Swift 通用语法速览](./05-swift-syntax-quick-start.md)，先快速建立 Swift 语法映射
+- 如果你几乎没有编程基础，建议直接从[06. 变量、常量与最基本的数据类型](./06-variables-and-constants.md)开始
+
+需要特别说明的是：
+
+- 第五章是速览，不会把概念拆得很细
+- 第六章和第七章会按更适合初学者的节奏展开
 
 ## 本章练习
 

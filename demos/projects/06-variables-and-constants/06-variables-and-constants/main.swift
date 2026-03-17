@@ -1,6 +1,6 @@
 //
 //  main.swift
-//  05-Var-and-Const
+//  06-variables-and-constants
 //
 //  Created by 时雨 on 2026/3/16.
 //

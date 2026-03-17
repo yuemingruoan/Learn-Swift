@@ -19,13 +19,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		9FE9ACAE2F6836EB003F9A64 /* 05-Var-and-Const */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "05-Var-and-Const"; sourceTree = BUILT_PRODUCTS_DIR; };
+		9FE9ACAE2F6836EB003F9A64 /* 06-variables-and-constants */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "06-variables-and-constants"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		9FE9ACB02F6836EB003F9A64 /* 05-Var-and-Const */ = {
+		9FE9ACB02F6836EB003F9A64 /* 06-variables-and-constants */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "05-Var-and-Const";
+			path = "06-variables-and-constants";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -44,7 +44,7 @@
 		9FE9ACA52F6836EB003F9A64 = {
 			isa = PBXGroup;
 			children = (
-				9FE9ACB02F6836EB003F9A64 /* 05-Var-and-Const */,
+				9FE9ACB02F6836EB003F9A64 /* 06-variables-and-constants */,
 				9FE9ACAF2F6836EB003F9A64 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -52,7 +52,7 @@
 		9FE9ACAF2F6836EB003F9A64 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				9FE9ACAE2F6836EB003F9A64 /* 05-Var-and-Const */,
+				9FE9ACAE2F6836EB003F9A64 /* 06-variables-and-constants */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -60,9 +60,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		9FE9ACAD2F6836EB003F9A64 /* 05-Var-and-Const */ = {
+		9FE9ACAD2F6836EB003F9A64 /* 06-variables-and-constants */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9FE9ACB52F6836EB003F9A64 /* Build configuration list for PBXNativeTarget "05-Var-and-Const" */;
+			buildConfigurationList = 9FE9ACB52F6836EB003F9A64 /* Build configuration list for PBXNativeTarget "06-variables-and-constants" */;
 			buildPhases = (
 				9FE9ACAA2F6836EB003F9A64 /* Sources */,
 				9FE9ACAB2F6836EB003F9A64 /* Frameworks */,
@@ -73,13 +73,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				9FE9ACB02F6836EB003F9A64 /* 05-Var-and-Const */,
+				9FE9ACB02F6836EB003F9A64 /* 06-variables-and-constants */,
 			);
-			name = "05-Var-and-Const";
+			name = "06-variables-and-constants";
 			packageProductDependencies = (
 			);
-			productName = "05-Var-and-Const";
-			productReference = 9FE9ACAE2F6836EB003F9A64 /* 05-Var-and-Const */;
+			productName = "06-variables-and-constants";
+			productReference = 9FE9ACAE2F6836EB003F9A64 /* 06-variables-and-constants */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -97,7 +97,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 9FE9ACA92F6836EB003F9A64 /* Build configuration list for PBXProject "05-Var-and-Const" */;
+			buildConfigurationList = 9FE9ACA92F6836EB003F9A64 /* Build configuration list for PBXProject "06-variables-and-constants" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -111,7 +111,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				9FE9ACAD2F6836EB003F9A64 /* 05-Var-and-Const */,
+				9FE9ACAD2F6836EB003F9A64 /* 06-variables-and-constants */,
 			);
 		};
 /* End PBXProject section */
@@ -276,7 +276,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		9FE9ACA92F6836EB003F9A64 /* Build configuration list for PBXProject "05-Var-and-Const" */ = {
+		9FE9ACA92F6836EB003F9A64 /* Build configuration list for PBXProject "06-variables-and-constants" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9FE9ACB32F6836EB003F9A64 /* Debug */,
@@ -285,7 +285,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9FE9ACB52F6836EB003F9A64 /* Build configuration list for PBXNativeTarget "05-Var-and-Const" */ = {
+		9FE9ACB52F6836EB003F9A64 /* Build configuration list for PBXNativeTarget "06-variables-and-constants" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9FE9ACB62F6836EB003F9A64 /* Debug */,

@@ -566,6 +566,4 @@ if let text = readLine() {
 
 如果你做完练习后想对照参考答案，可以查看：
 
-```text
-exercises/zh-CN/answers/08-optional-basics.md
-```
+- [08. Optional 入门 练习答案](../../../exercises/zh-CN/answers/08-optional-basics.md)

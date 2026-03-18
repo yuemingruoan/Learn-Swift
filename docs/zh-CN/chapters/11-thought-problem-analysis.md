@@ -4,8 +4,8 @@
 
 - 前置章节：[08. Optional 入门](./08-optional-basics.md)、[09. 命令行输入与输出](./09-command-line-io.md)、[10. 表达式、条件判断与循环](./10-expressions-conditions-and-loops.md)
 - 上一章：[10. 表达式、条件判断与循环](./10-expressions-conditions-and-loops.md)
-- 建议下一章：12. 函数与代码复用（待补充）
-- 下一章：12. 函数与代码复用（待补充）
+- 建议下一章：[12. 函数与代码复用](./12-functions-and-code-reuse.md)
+- 下一章：[12. 函数与代码复用](./12-functions-and-code-reuse.md)
 - 适合谁先读：已经完成第十章思考题，或希望系统阅读解题过程的读者
 
 ## 本章目标

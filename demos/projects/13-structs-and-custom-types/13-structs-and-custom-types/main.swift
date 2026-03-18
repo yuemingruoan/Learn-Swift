@@ -1,6 +1,6 @@
 //
 //  main.swift
-//  12-functions-and-code-reuse
+//  13-structs-and-custom-types
 //
 //  Created by 时雨 on 2026/3/18.
 //
@@ -31,21 +31,30 @@ func roundToOneDecimal(value: Double) -> Double {
     return Double(firstDecimal) / 10
 }
 
-var name: String
-var frequency: Int
-var score: Int
-var scoreSum: Int = 0
-var average: Double
-var passNum: Int = 0
-var passRate: Double
+struct StudentRecord {
+    var name: String
+    var frequency: Int
+    var scoreSum: Int
+    var passCount: Int
+
+    func average() -> Double {
+        return roundToOneDecimal(value: Double(scoreSum) / Double(frequency))
+    }
+
+    func passRate() -> Double {
+        return roundToOneDecimal(value: Double(passCount) / Double(frequency) * 100)
+    }
+}
+
 let invalidPrompt: String = "输入无效，请重新输入"
+var record: StudentRecord
 
 // 获取学生姓名
 while true {
     printPrompt(message: "请输入学生姓名：")
 
     if let nameTemp = readLine() {
-        name = nameTemp
+        record = StudentRecord(name: nameTemp, frequency: 0, scoreSum: 0, passCount: 0)
         break
     } else {
         print(invalidPrompt)
@@ -59,7 +68,7 @@ while true {
     if let frequencyStringTemp = readLine() {
         if let frequencyIntTemp = Int(frequencyStringTemp) {
             if frequencyIntTemp > 0 {
-                frequency = frequencyIntTemp
+                record.frequency = frequencyIntTemp
                 break
             } else {
                 print(invalidPrompt)
@@ -73,18 +82,17 @@ while true {
 }
 
 // 获取考试成绩
-for freNow in 1...frequency {
+for freNow in 1...record.frequency {
     while true {
         printPrompt(message: "请输入第 \(freNow) 次考试成绩：")
 
         if let scoreStringTemp = readLine() {
             if let scoreIntTemp = Int(scoreStringTemp) {
                 if isValidScore(score: scoreIntTemp) {
-                    score = scoreIntTemp
-                    scoreSum += score
+                    record.scoreSum += scoreIntTemp
 
-                    if isPassed(score: score) {
-                        passNum += 1
+                    if isPassed(score: scoreIntTemp) {
+                        record.passCount += 1
                     }
 
                     break
@@ -100,11 +108,8 @@ for freNow in 1...frequency {
     }
 }
 
-average = roundToOneDecimal(value: Double(scoreSum) / Double(frequency))
-passRate = roundToOneDecimal(value: Double(passNum) / Double(frequency) * 100)
-
-print("学生姓名：", name)
-print("考试次数：", frequency)
-print("总分：", scoreSum)
-print("平均分：", average)
-print("及格率：\(passRate)%")
+print("学生姓名：", record.name)
+print("考试次数：", record.frequency)
+print("总分：", record.scoreSum)
+print("平均分：", record.average())
+print("及格率：\(record.passRate())%")

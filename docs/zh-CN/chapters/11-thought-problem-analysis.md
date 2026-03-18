@@ -18,9 +18,9 @@
 - 明确总分、平均分、及格率分别应在何时计算
 - 使用更直接的方式处理“保留一位小数并四舍五入”
 
-## 本章对应课件
+## 本章对应目录
 
-- `exercises/zh-CN/answers/10-expressions-conditions-and-loops`
+- 对应项目目录：`exercises/zh-CN/answers/10-expressions-conditions-and-loops`
 
 本章不再引入新的核心语法，重点是说明如何将前面已经学习过的语法组织成一个完整程序。
 

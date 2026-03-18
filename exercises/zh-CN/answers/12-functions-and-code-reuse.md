@@ -162,17 +162,3 @@ print(roundToOneDecimal(value: 4.0 / 5.0 * 100))
 说明：
 
 - 这一版的核心思想是：直接取第二位小数，再判断第一位小数是否进位
-
-## 思考题提示
-
-如果你尝试继续重构第十章思考题，可以优先考虑提炼下面这些函数：
-
-1. `printPrompt(message: String)`
-2. `isPassed(score: Int) -> Bool`
-3. `roundToOneDecimal(value: Double) -> Double`
-4. `isValidScore(score: Int) -> Bool`
-
-判断是否值得提炼的标准可以先抓住两点：
-
-- 这段逻辑是否重复出现
-- 提炼之后，主流程是否更清晰

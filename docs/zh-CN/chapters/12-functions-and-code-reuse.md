@@ -4,8 +4,8 @@
 
 - 前置章节：[09. 命令行输入与输出](./09-command-line-io.md)、[10. 表达式、条件判断与循环](./10-expressions-conditions-and-loops.md)、[11. 思考题解析：命令行成绩录入程序](./11-thought-problem-analysis.md)
 - 上一章：[11. 思考题解析：命令行成绩录入程序](./11-thought-problem-analysis.md)
-- 建议下一章：13. 结构体与最基础的自定义类型（待补充）
-- 下一章：13. 结构体与最基础的自定义类型（待补充）
+- 建议下一章：[13. 结构体与最基础的自定义类型](./13-structs-and-custom-types.md)
+- 下一章：[13. 结构体与最基础的自定义类型](./13-structs-and-custom-types.md)
 - 适合谁先读：已经能够写出较长的命令行程序，准备学习如何减少重复代码的读者
 
 ## 本章目标
@@ -19,9 +19,9 @@
 - 使用返回值让函数交出计算结果
 - 从已有程序中识别重复逻辑，并将其提炼成函数
 
-## 本章对应课件
+## 本章对应目录
 
-- `demos/projects/12-functions-and-code-reuse`
+- 对应项目目录：`demos/projects/12-functions-and-code-reuse`
 
 本章建议直接对照第十章思考题答案阅读。因为观察一段已经能够运行的程序，判断其中哪些逻辑值得提炼才是学习函数最快的办法。
 
@@ -616,6 +616,10 @@ func add(a: Int, b: Int) -> Int {
 4. 将”获取考试次数“提炼成函数
 5. 对比提炼前后，主流程是否更清晰
 
+- 本题对应参考答案：
+
+- [12-functions-and-code-reuse.xcodeproj](/Users/shiyu/Documents/Project/Learn-Swift/demos/projects/12-functions-and-code-reuse/12-functions-and-code-reuse.xcodeproj)
+
 
 ## 本章小结
 
@@ -630,8 +634,6 @@ func add(a: Int, b: Int) -> Int {
 
 如果能够从第十章思考题中识别重复逻辑，并逐步将其提炼为函数，那么后续进入结构体、类以及更复杂的程序组织方式时，难度会明显降低。
 
-## 参考答案
-
-如果你做完练习后想对照参考答案，可以查看：
+- 本题对应参考答案：
 
 - [12. 函数与代码复用 练习答案](../../../exercises/zh-CN/answers/12-functions-and-code-reuse.md)

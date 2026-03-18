@@ -4,8 +4,8 @@
 
 - 前置章节：[10. 表达式、条件判断与循环](./10-expressions-conditions-and-loops.md)、[11. 思考题解析：命令行成绩录入程序](./11-thought-problem-analysis.md)、[12. 函数与代码复用](./12-functions-and-code-reuse.md)
 - 上一章：[12. 函数与代码复用](./12-functions-and-code-reuse.md)
-- 建议下一章：14. 类与实例（待补充）
-- 下一章：14. 类与实例（待补充）
+- 建议下一章：[14. 数组与字典：列表与键值对](./14-arrays-and-dictionaries.md)
+- 下一章：[14. 数组与字典：列表与键值对](./14-arrays-and-dictionaries.md)
 - 适合谁先读：已经理解函数、参数与返回值，准备学习如何组织相关数据的读者
 
 ## 本章目标

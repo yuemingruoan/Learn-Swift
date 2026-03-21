@@ -597,12 +597,35 @@ func use(projector: Projector) {
 
 ## 本章练习与课后作业
 
-本章练习与课后作业将在后续版本补充。
+如果你想把这一章的“继承首先服务于建模”真正练一遍，建议直接从下面这个起始工程开始：
 
-这一轮先把最关键的判断标准立住：
+- 起始工程：`exercises/zh-CN/projects/19-inheritance-is-a-has-a-starter`
+- 练习草稿：`exercises/zh-CN/answers/19-inheritance-is-a-has-a-modeling.md`
 
-- 继承不是“哪里像就继承哪里”
-- 继承首先服务于 `is-a` 建模
+这个工程当前已经能运行，但关系还没有整理好。你会看到：
+
+- `StudentMember` 和 `TeacherMember` 之间有明显重复
+- 共同的“成员”概念还没有被抽出来
+- `Projector`、`StudyCenter`、`TeacherMember` 之间的关系需要重新判断
+
+这一章建议你完成下面这些重构：
+
+1. 提取 `LearningMember`，把 `name` 和通用介绍逻辑收进去。
+2. 让 `StudentMember` 和 `TeacherMember` 继承 `LearningMember`。
+3. 保持 `StudyCenter has-a Projector` 这种组合关系。
+4. 保持 `TeacherMember uses-a Projector` 这种使用关系。
+
+完成后，你的代码至少应该表现出下面这些特征：
+
+- `StudentMember is-a LearningMember`
+- `TeacherMember is-a LearningMember`
+- `StudyCenter` 不是 `Projector` 的子类
+- `TeacherMember` 通过方法使用 `Projector`，而不是把它当成父类
+
+这道练习最值得你反复问自己的不是“能不能少写几行”，而是：
+
+- 这句“X 是一种 Y”到底说不说得通
+- 这里更像 `is-a`、`has-a`，还是 `uses-a`
 
 ## 本章小结
 

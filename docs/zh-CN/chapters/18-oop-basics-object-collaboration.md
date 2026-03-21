@@ -168,6 +168,41 @@ plan.printSummary()
 - Swift 里可以用很多类型做设计
 - 但从这一章开始，我们借助 `class` 来建立最直观的“对象协作”感觉
 
+## 先把一个误区提前说清：OOP 不是 `class` 崇拜
+
+这里最好先把第 16 章学过的判断标准重新接上。
+
+前面我们已经知道：
+
+- `struct` 更偏值语义
+- `class` 更偏引用语义
+
+所以进入 OOP 之后，真正应该新增的不是：
+
+- “以后看到设计题就先写 `class`”
+
+而是：
+
+- “先想清楚谁负责什么，再决定它更适合值语义还是引用语义”
+
+也就是说，当前这一章真正要讲的是：
+
+- 怎样把状态和行为组织回合理的边界里
+- 怎样让多个类型自然协作
+
+至于 `struct` 还是 `class`，仍然要回到语义判断。
+
+例如，在本章的学习中心示例里：
+
+- `StudyTask` 更像一份任务数据，适合优先按 `struct` 理解
+- `StudyPlan` 需要统一管理一组任务进度，更适合先按一个协作主体来设计
+- `Student` 和 `LearningCenter` 更强调“谁负责发起动作、谁负责汇总结果”
+
+你现在可以先记住这个顺序：
+
+1. 先判断职责和边界
+2. 再判断值语义还是引用语义
+
 ## 什么叫“对象”
 
 当前阶段，不需要先把“对象”想得太玄。
@@ -273,6 +308,20 @@ class StudyPlan {
 
 - 边界清楚
 
+在本章 demo 里，你还会看到一种很轻量的做法：
+
+- 外部对象不直接伸手进去改另一个对象的内部状态
+
+例如：
+
+- `Student` 不会把 `StudyPlan` 的任务数组直接暴露给外部
+- `LearningCenter` 只读取学生对外提供的进度结果
+
+如果你在示例代码里看到 `private` 或 `private(set)`，当前阶段先把它理解成：
+
+- 这个内部状态应该由类型自己管
+- 外部可以拿结果，但不应该随便直接改
+
 ## 什么是职责划分
 
 OOP 的第二个核心视角，是职责划分。
@@ -287,7 +336,7 @@ OOP 的第二个核心视角，是职责划分。
 
 例如，在一个学习中心示例里：
 
-- `StudyTask` 负责表示单个任务
+- `StudyTask` 负责表示单个任务数据
 - `StudyPlan` 负责管理一组任务和进度
 - `Student` 负责执行自己的学习动作
 - `LearningCenter` 负责观察多个学生的整体情况
@@ -318,7 +367,7 @@ OOP 的第二个核心视角，是职责划分。
 
 - `Student` 负责发起动作
 - `StudyPlan` 负责管理任务
-- `StudyTask` 负责维护单个任务状态
+- `StudyTask` 负责提供单个任务的数据表示
 
 这就是“对象之间协作完成事情”的最基础样子。
 
@@ -343,7 +392,7 @@ OOP 的第二个核心视角，是职责划分。
 
 - `demos/projects/18-oop-basics-object-collaboration`
 
-这一章的示例会出现 4 个主要对象：
+这一章的示例会出现 4 个主要类型：
 
 - `StudyTask`
 - `StudyPlan`
@@ -352,41 +401,32 @@ OOP 的第二个核心视角，是职责划分。
 
 它们的分工分别是：
 
-- `StudyTask`：表示一项具体任务，例如“阅读第 18 章”
+- `StudyTask`：表示一项具体任务数据，例如“阅读第 18 章”
 - `StudyPlan`：管理任务列表和完成进度
 - `Student`：持有自己的学习计划，并执行学习动作
 - `LearningCenter`：观察多个学生的总体学习情况
 
-先看最基础的任务对象：
+先看最基础的任务数据：
 
 ```swift
-class StudyTask {
+struct StudyTask {
     let title: String
     let estimatedHours: Int
     var isFinished: Bool
-
-    init(title: String, estimatedHours: Int, isFinished: Bool = false) {
-        self.title = title
-        self.estimatedHours = estimatedHours
-        self.isFinished = isFinished
-    }
-
-    func markFinished() {
-        isFinished = true
-    }
 }
 ```
 
 这时你可以先建立一个很朴素的直觉：
 
-- 单个任务对象，负责单个任务自己的状态
+- 单个任务更像一份值数据
+- 它先不承担“协调整个系统”的责任
 
 然后是学习计划：
 
 ```swift
 class StudyPlan {
     let name: String
-    var tasks: [StudyTask]
+    private(set) var tasks: [StudyTask]
 
     init(name: String, tasks: [StudyTask]) {
         self.name = name
@@ -394,7 +434,7 @@ class StudyPlan {
     }
 
     func finishTask(at index: Int) {
-        tasks[index].markFinished()
+        tasks[index].isFinished = true
     }
 
     func progressText() -> String {
@@ -416,12 +456,17 @@ class StudyPlan {
 - `StudyPlan` 不负责“学生今天有没有心情学习”
 - 它只负责管理自己的任务和进度
 
+这里你也可以顺手注意一下：
+
+- `tasks` 没有继续完全暴露给外部随便改
+- 这更符合“进度由 `StudyPlan` 自己维护”的封装边界
+
 再看学生：
 
 ```swift
 class Student {
     let name: String
-    let plan: StudyPlan
+    private let plan: StudyPlan
 
     init(name: String, plan: StudyPlan) {
         self.name = name
@@ -430,6 +475,10 @@ class Student {
 
     func completeTask(at index: Int) {
         plan.finishTask(at: index)
+    }
+
+    func progressText() -> String {
+        return plan.progressText()
     }
 }
 ```
@@ -456,7 +505,7 @@ class LearningCenter {
         print("当前学习中心：\(name)")
 
         for student in students {
-            print("\(student.name)：\(student.plan.progressText())")
+            print("\(student.name)：\(student.progressText())")
         }
     }
 }
@@ -519,6 +568,7 @@ class LearningCenter {
 当前这一章的重点只是：
 
 - 先建立“对象负责自己的状态和行为”这层思维方式
+- 不是把所有东西机械地改写成 `class`
 
 ## 本章最需要建立的判断标准
 
@@ -554,6 +604,10 @@ class LearningCenter {
 
 如果一个类里只是在机械地堆属性和方法，没有清楚职责边界，那仍然可能很乱。
 
+反过来也是一样：
+
+- 一个 `struct` 只要边界清楚、职责合理，也完全可以出现在 OOP 风格的设计里
+
 ### 3. 一个对象负责太多事
 
 比如既负责输入、又负责统计、又负责显示、又负责管理别的对象。
@@ -566,12 +620,36 @@ class LearningCenter {
 
 ## 本章练习与课后作业
 
-本章练习与课后作业将在后续版本单独补充。
+如果你想把这一章的“封装、职责划分、对象协作”真正练一遍，建议直接从下面这个起始工程开始：
 
-这一轮先把两件事跑通：
+- 起始工程：`exercises/zh-CN/projects/18-oop-basics-object-collaboration-starter`
+- 练习草稿：`exercises/zh-CN/answers/18-oop-basics-object-collaboration.md`
 
-- 正文能帮助读者建立 OOP 入门直觉
-- demo 能让读者看清对象协作到底长什么样
+这个工程当前已经可以运行，但结构保持在“还比较散”的状态。你会看到：
+
+- 同一件事的数据仍然散落在顶层变量里
+- 进度统计和完成任务逻辑还留在顶层函数中
+- `main.swift` 仍然亲自管理所有状态
+
+这一章建议你完成下面这些重构：
+
+1. 提取 `StudyPlan`，让任务和进度统计回到计划对象内部。
+2. 提取 `Student`，让学生对象负责发起“完成任务”的动作。
+3. 提取 `LearningCenter`，让学习中心对象负责输出整体概览。
+4. 减少 `main.swift` 对内部状态的直接读写。
+
+完成后，你的代码至少应该表现出下面这些特征：
+
+- `progressText()` 不再依赖顶层数组和顶层变量
+- `finishTask(at:)` 不再是顶层函数
+- `main.swift` 不再直接修改任务完成状态
+- 输出结果仍然和起始工程大体一致
+
+这道练习最重要的不是“多写几个类”，而是开始稳定地回答下面这类问题：
+
+- 这件事归谁管
+- 这段逻辑该挂在哪个对象上
+- `main.swift` 有没有从“总控台”退回到只负责串联流程
 
 ## 本章小结
 

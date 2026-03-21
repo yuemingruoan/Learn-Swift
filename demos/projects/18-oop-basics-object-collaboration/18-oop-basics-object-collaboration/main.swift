@@ -12,7 +12,7 @@ func printDivider(title: String) {
     print("======== \(title) ========")
 }
 
-class StudyTask {
+struct StudyTask {
     let title: String
     let estimatedHours: Int
     var isFinished: Bool
@@ -23,10 +23,6 @@ class StudyTask {
         self.isFinished = isFinished
     }
 
-    func markFinished() {
-        isFinished = true
-    }
-
     func summary(index: Int) -> String {
         let status = isFinished ? "已完成" : "未完成"
         return "\(index). \(title) - 预计 \(estimatedHours) 小时 - \(status)"
@@ -35,7 +31,7 @@ class StudyTask {
 
 class StudyPlan {
     let name: String
-    var tasks: [StudyTask]
+    private(set) var tasks: [StudyTask]
 
     init(name: String, tasks: [StudyTask]) {
         self.name = name
@@ -60,7 +56,7 @@ class StudyPlan {
 
     func finishTask(at index: Int) {
         if index >= 0 && index < tasks.count {
-            tasks[index].markFinished()
+            tasks[index].isFinished = true
         }
     }
 
@@ -73,7 +69,7 @@ class StudyPlan {
 
 class Student {
     let name: String
-    let plan: StudyPlan
+    private let plan: StudyPlan
 
     init(name: String, plan: StudyPlan) {
         self.name = name
@@ -88,6 +84,14 @@ class Student {
     func completeTask(at index: Int) {
         plan.finishTask(at: index)
         print("\(name) 完成了一项任务，当前进度：\(plan.progressText())")
+    }
+
+    func printTaskList() {
+        plan.printTasks()
+    }
+
+    func progressText() -> String {
+        return plan.progressText()
     }
 }
 
@@ -104,7 +108,7 @@ class LearningCenter {
         print("学习中心：\(name)")
 
         for student in students {
-            print("- \(student.name)：\(student.plan.progressText())")
+            print("- \(student.name)：\(student.progressText())")
         }
     }
 }
@@ -133,9 +137,9 @@ center.printOverview()
 
 printDivider(title: "同一件事不再由 main.swift 亲自管理")
 print("当前任务列表：")
-student.plan.printTasks()
+student.printTaskList()
 print("说明：")
-print("- StudyTask 负责单个任务状态")
+print("- StudyTask 用 struct 表示单个任务数据")
 print("- StudyPlan 负责管理任务与进度")
-print("- Student 负责发起学习动作")
+print("- Student 负责发起学习动作，并对外暴露必要结果")
 print("- LearningCenter 负责查看整体概览")

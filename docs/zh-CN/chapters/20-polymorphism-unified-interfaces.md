@@ -4,8 +4,8 @@
 
 - 前置章节：[19. 继承：is-a、has-a 与类型层次设计](./19-inheritance-is-a-has-a-modeling.md)
 - 上一章：[19. 继承：is-a、has-a 与类型层次设计](./19-inheritance-is-a-has-a-modeling.md)
-- 建议下一章：21. 协议：比继承更灵活的抽象方式（待补充）
-- 下一章：21. 协议：比继承更灵活的抽象方式（待补充）
+- 建议下一章：[21. 协议：比继承更灵活的抽象方式](./21-protocols-flexible-abstraction.md)
+- 下一章：[21. 协议：比继承更灵活的抽象方式](./21-protocols-flexible-abstraction.md)
 - 适合谁先读：已经理解父类、子类和 `override`，准备理解“统一调用，不同结果”这类行为差异的读者
 
 ## 本章目标
@@ -52,6 +52,26 @@ print(member.dailyFocus())
 - 变量类型写的是父类
 - 实际装进去的是子类实例
 - 调用形式仍然是 `变量名.方法名()`
+
+但这里还要立刻补一句非常重要的限制：
+
+- 当你把它放进父类类型变量后，当前这个变量就只能按父类接口来使用
+
+例如：
+
+```swift
+let member: LearningMember = StudentMember(name: "小林", track: "iOS")
+
+print(member.name)
+print(member.dailyFocus())
+// print(member.track)
+```
+
+这里前两行可以工作，但最后一行当前阶段应该先理解成：
+
+- `track` 是 `StudentMember` 自己的成员
+- `member` 这个变量现在只承诺按 `LearningMember` 的接口来使用
+- 所以父类视角下看不见子类独有成员
 
 ### 父类数组里放多个不同子类
 
@@ -130,6 +150,38 @@ if role == "student" {
 - 调用方式尽量统一
 - 具体行为交给各个子类自己决定
 
+你可以先把“没有多态”时常见的写法理解成这样：
+
+```swift
+func printFocusWithoutPolymorphism(member: LearningMember) {
+    if let student = member as? StudentMember {
+        print("\(student.name)：继续完成 \(student.track) 方向的练习")
+    } else if let teacher = member as? TeacherMember {
+        print("\(teacher.name)：准备 \(teacher.subject) 的授课内容")
+    } else if let mentor = member as? MentorMember {
+        print("\(mentor.name)：整理 \(mentor.groupName) 的答疑记录")
+    }
+}
+```
+
+这类代码的问题不是“不能运行”，而是：
+
+- 调用方自己知道了太多子类细节
+- 每增加一个新子类，外部就得继续补分支
+
+而用了多态之后，同样的事情可以压缩成：
+
+```swift
+func printFocus(member: LearningMember) {
+    print("\(member.name)：\(member.dailyFocus())")
+}
+```
+
+这时调用方只关心：
+
+- 这里有一个 `LearningMember`
+- 它能返回自己的 `dailyFocus()`
+
 ## 什么是多态
 
 当前阶段，可以先把多态理解成：
@@ -184,6 +236,31 @@ let member: LearningMember = StudentMember(name: "小林", track: "iOS")
 所以后面如果调用一个被重写的方法，程序看到的仍然是：
 
 - 这是个学生对象
+
+## 父类视角能看到什么，不能看到什么
+
+这一点如果不单独说清楚，很多读者后面会把“能装进去”误解成“什么都能直接用”。
+
+先看这段代码：
+
+```swift
+let member: LearningMember = StudentMember(name: "小林", track: "iOS")
+
+print(member.name)
+print(member.dailyFocus())
+// print(member.track)
+```
+
+这里最稳妥的理解是：
+
+- `name` 和 `dailyFocus()` 都属于父类接口，所以可以直接用
+- `track` 只属于 `StudentMember`，所以当前这个父类视角变量不能直接访问
+
+也就是说，多态带来的不是“看到更多细节”，而是：
+
+- 用更统一的接口看待不同对象
+
+这正是它和“到处判断具体子类再分别处理”的最大区别。
 
 ## 多态最直观的场景：父类数组里放多个不同子类
 
@@ -326,6 +403,11 @@ func runMorningBriefing(members: [LearningMember]) {
 
 至于每个对象到底怎么完成这件事，交给对象自己决定。
 
+你也可以把这一点和上一节的对照示例一起记：
+
+- 不用多态时，外部往往写一长串 `as?` 或 `if-else`
+- 用了多态后，外部通常只保留 `member.dailyFocus()` 这种统一调用
+
 这会让代码更容易扩展。因为以后如果你新增一个子类，例如：
 
 - `ReviewerMember`
@@ -411,6 +493,38 @@ func runMorningBriefing(members: [LearningMember]) {
 
 当前阶段只需要把最基础的动态行为差异看懂，不必一上来追求很复杂的抽象层次。
 
+## 本章练习与课后作业
+
+如果你想把这一章“多态减少了什么”真正练一遍，建议直接从下面这个起始工程开始：
+
+- 起始工程：`exercises/zh-CN/projects/20-polymorphism-unified-interfaces-starter`
+- 练习草稿：`exercises/zh-CN/answers/20-polymorphism-unified-interfaces.md`
+
+这个工程当前已经有父类和几个子类，但统一汇报仍然依赖外部分支判断。你会看到：
+
+- 调用方自己知道了太多 `StudentMember`、`TeacherMember`、`MentorMember` 的细节
+- 外部还在写 `as?` 和 `if-else`
+- 共同能力还没有真正收敛成父类接口
+
+这一章建议你完成下面这些重构：
+
+1. 在 `LearningMember` 中定义统一接口，例如 `dailyFocus()`。
+2. 让不同子类分别给出自己的实现。
+3. 把 `printFocusWithoutPolymorphism(member:)` 的分支逻辑改成统一调用。
+4. 保持现有输出语义基本不变。
+
+完成后，你的代码至少应该表现出下面这些特征：
+
+- 外部不再需要逐个判断 `StudentMember`、`TeacherMember`、`MentorMember`
+- `[LearningMember]` 可以统一遍历
+- 调用方只需要写类似 `member.dailyFocus()` 的代码
+- 新增一个子类时，外部汇报流程不需要继续补分支
+
+这道练习最值得观察的不是语法，而是重构前后的差别：
+
+- 重构前：调用方知道太多细节
+- 重构后：调用方只要求统一接口
+
 ## 本章小结
 
 这一章最需要记住的是下面这组关系：
@@ -428,3 +542,18 @@ func runMorningBriefing(members: [LearningMember]) {
 - 输出结果却各不相同
 
 那么这一章最重要的目标就已经完成了。
+
+## 接下来怎么读
+
+下一章建议继续阅读：
+
+- [21. 协议：比继承更灵活的抽象方式](./21-protocols-flexible-abstraction.md)
+
+因为前面这一章的统一调用，仍然是建立在继承层次上的。
+
+接下来最自然的问题就是：
+
+- 如果几个类型不是父子关系，还能不能统一调用
+- 如果我想让 `struct` 和 `class` 一起参与抽象，该怎么办
+
+第 21 章会专门解决这个问题。

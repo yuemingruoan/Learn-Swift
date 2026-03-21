@@ -67,6 +67,18 @@ class MentorMember: LearningMember {
     }
 }
 
+func printFocusWithoutPolymorphism(member: LearningMember) {
+    if let student = member as? StudentMember {
+        print("\(student.name)：继续完成 \(student.track) 方向的练习")
+    } else if let teacher = member as? TeacherMember {
+        print("\(teacher.name)：准备 \(teacher.subject) 的授课内容")
+    } else if let mentor = member as? MentorMember {
+        print("\(mentor.name)：整理 \(mentor.groupName) 的答疑记录")
+    } else {
+        print("\(member.name)：完成今天的学习安排")
+    }
+}
+
 func runMorningBriefing(members: [LearningMember]) {
     print("晨会开始：")
 
@@ -89,6 +101,16 @@ for member in members {
     print("\(member.name) 的今日重点：\(member.dailyFocus())")
 }
 
+printDivider(title: "不用多态时，外部需要自己判断具体子类")
+for member in members {
+    printFocusWithoutPolymorphism(member: member)
+}
+
+printDivider(title: "用多态后，外部只保留统一接口调用")
+for member in members {
+    member.printDailyBrief()
+}
+
 printDivider(title: "父类类型变量也可以持有不同子类")
 var currentMember: LearningMember = StudentMember(name: "小周", track: "SwiftUI")
 currentMember.printDailyBrief()
@@ -96,7 +118,16 @@ currentMember.printDailyBrief()
 currentMember = TeacherMember(name: "李老师", subject: "协议与抽象")
 currentMember.printDailyBrief()
 
+printDivider(title: "父类视角只能访问父类接口")
+print("当前名字：\(currentMember.name)")
+print("当前重点：\(currentMember.dailyFocus())")
+print("说明：")
+print("- currentMember 现在按 LearningMember 使用。")
+print("- 因此可以访问 name 和 dailyFocus()。")
+print("- 但不能直接访问 TeacherMember 才有的 subject。")
+
 printDivider(title: "多态减少外部的类型判断")
 print("说明：")
 print("- 调用方只要求对象能按 LearningMember 的接口工作。")
+print("- 如果不用多态，外部就得自己写 as? 和 if-else 分支。")
 print("- 具体输出由各个子类自己重写 dailyFocus() 决定。")

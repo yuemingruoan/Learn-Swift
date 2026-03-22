@@ -543,6 +543,7 @@ let task = try! parseStudyTask(from: "阅读章节,2,false")
 
 - 作业答案：`exercises/zh-CN/answers/23-error-handling-clear-failure-paths.md`
 - 起始工程：`exercises/zh-CN/projects/23-error-handling-clear-failure-paths-starter`
+- 参考答案工程：`exercises/zh-CN/answers/23-error-handling-clear-failure-paths`
 
 ### 练习 1：把一行文本解析为 `StudyTask`
 

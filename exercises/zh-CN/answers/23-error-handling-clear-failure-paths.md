@@ -1,21 +1,23 @@
-# 23. 错误处理：让失败路径更清楚 课后作业草稿
+# 23. 错误处理：让失败路径更清楚 练习答案
 
 对应章节：
 
 - [23. 错误处理：让失败路径更清楚](../../../docs/zh-CN/chapters/23-error-handling-clear-failure-paths.md)
 
-起始工程：
+如果你想一边看答案一边运行 starter project，可以打开：
 
 - `exercises/zh-CN/projects/23-error-handling-clear-failure-paths-starter`
 
+如果你想直接运行本章练习的参考工程，也可以打开：
+
+- `exercises/zh-CN/answers/23-error-handling-clear-failure-paths`
+
 说明：
 
-- 两道题使用同一业务场景：解析一行学习任务文本
-- starter project 当前已经能运行
-- 但它仍然把多种失败原因压缩成同一个错误
-- 第一题侧重基础语法与错误建模
-- 第二题侧重错误处理策略的判断
-- 当前阶段不要求引入 `Result`、`defer` 或更复杂的异常模型
+- 本章两道题使用同一业务场景：解析一行学习任务文本
+- starter project 已经提供了可运行骨架
+- 本文档给出推荐实现与思路说明
+- `exercises/zh-CN/answers/23-error-handling-clear-failure-paths` 则提供可直接运行的参考工程
 
 ## 练习 1：把一行文本解析为 `StudyTask`
 
@@ -53,25 +55,114 @@ struct StudyTask {
 - 时长小于 0
 - 完成状态不是 `true` 或 `false`
 
-你需要重点修改下面几部分：
+参考答案的核心思路是：
 
-1. 把当前的 `StudyTaskParseError.invalidLine` 改造成更具体的错误类型。
-2. 在 `parseStudyTask(from:)` 和 `parseFinishedFlag(_:)` 中抛出更明确的错误。
-3. 修改 `printParseResult(for:)`，让 `do-catch` 能根据不同错误分别提示。
-4. 保持 starter project 当前的主流程结构，不要推倒重写。
+1. 把单一 `invalidLine` 拆成多个具体错误。
+2. 在解析函数内部分别抛出这些错误。
+3. 在调用方使用 `do-catch` 按错误原因分别处理。
 
-完成标准：
+参考答案示例：
 
-- `StudyTask` 只在输入合法时才会被创建。
-- 失败原因被明确建模，而不是压缩成一个布尔结果。
-- 主流程能够根据错误类型区分提示内容。
-- 成功路径与失败路径在代码中边界清楚。
+```swift
+struct StudyTask {
+    let title: String
+    let estimatedHours: Int
+    var isFinished: Bool
+}
 
-建议步骤：
+enum StudyTaskParseError: Error {
+    case wrongFieldCount(expected: Int, actual: Int)
+    case emptyTitle
+    case invalidEstimatedHours(text: String)
+    case negativeEstimatedHours(Int)
+    case invalidFinishedFlag(text: String)
+}
+```
 
-1. 先阅读 starter project 里已有的注释说明。
-2. 先细化错误类型，再回头修改解析函数。
-3. 最后再改调用方的 `catch` 分支。
+如果还需要把错误转换成人类可读的提示，可以继续补一个方法：
+
+```swift
+extension StudyTaskParseError {
+    func userMessage() -> String {
+        switch self {
+        case .wrongFieldCount(let expected, let actual):
+            return "字段数量不对。期望 \(expected) 段，实际拿到 \(actual) 段。"
+        case .emptyTitle:
+            return "标题不能为空。"
+        case .invalidEstimatedHours(let text):
+            return "时长必须是整数，当前拿到的是：\(text)"
+        case .negativeEstimatedHours(let value):
+            return "时长不能是负数，当前拿到的是：\(value)"
+        case .invalidFinishedFlag(let text):
+            return "完成状态只能是 true 或 false，当前拿到的是：\(text)"
+        }
+    }
+}
+```
+
+解析函数可以写成：
+
+```swift
+func parseFinishedFlag(_ text: String) throws -> Bool {
+    let normalizedText = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+
+    switch normalizedText {
+    case "true":
+        return true
+    case "false":
+        return false
+    default:
+        throw StudyTaskParseError.invalidFinishedFlag(text: text)
+    }
+}
+
+func parseStudyTask(from line: String) throws -> StudyTask {
+    let parts = line
+        .split(separator: ",", omittingEmptySubsequences: false)
+        .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
+
+    guard parts.count == 3 else {
+        throw StudyTaskParseError.wrongFieldCount(expected: 3, actual: parts.count)
+    }
+
+    let title = parts[0]
+    let estimatedHoursText = parts[1]
+    let finishedFlagText = parts[2]
+
+    guard !title.isEmpty else {
+        throw StudyTaskParseError.emptyTitle
+    }
+
+    guard let estimatedHours = Int(estimatedHoursText) else {
+        throw StudyTaskParseError.invalidEstimatedHours(text: estimatedHoursText)
+    }
+
+    guard estimatedHours >= 0 else {
+        throw StudyTaskParseError.negativeEstimatedHours(estimatedHours)
+    }
+
+    let isFinished = try parseFinishedFlag(finishedFlagText)
+
+    return StudyTask(title: title, estimatedHours: estimatedHours, isFinished: isFinished)
+}
+```
+
+调用方可以写成：
+
+```swift
+do {
+    let task = try parseStudyTask(from: line)
+    print(task)
+} catch let error as StudyTaskParseError {
+    print(error.userMessage())
+}
+```
+
+说明：
+
+- 这一版的重点不是“抛出了错误”这一事实本身，而是失败原因被保留下来了。
+- 一旦错误原因被区分，调用方就可以决定是提示用户、跳过记录，还是继续上抛。
+- 这也是错误处理相对于 `Bool` 或统一提示语更有表达力的地方。
 
 ## 思考题：什么时候可以使用 `try!`？
 
@@ -87,36 +178,51 @@ struct StudyTask {
 - 场景一：输入来自用户在控制台中的实时输入
 - 场景二：输入来自程序中写死的演示数据或测试数据
 
-请回答下面这些问题：
+这一题的核心不是鼓励滥用 `try!`，而是帮助你建立更准确的边界判断。
 
-1. 哪个场景更适合使用 `do-catch`？为什么？
-2. 哪个场景在特定前提下可以使用 `try!`？为什么？
-3. `try!` 带来的简洁体现在哪里？
-4. 调用方在写下 `try!` 时，实际上作出了什么保证？
-5. 如果这个保证不成立，会产生什么后果？
+参考结论如下：
 
-完成标准：
+1. 用户输入更适合 `do-catch`。  
+原因是这类数据来自外部环境，失败是业务中的正常情况，因此应保留失败原因。
 
-- 能明确指出 `try!` 不适合用户输入这类不确定数据。
-- 能说明 `try!` 适合“逻辑上保证不会失败”的少数场景。
-- 能举出至少一种合理场景，例如写死的教学示例数据或固定测试数据。
-- 能解释 `try!` 的简洁，来自于省略常规错误处理样板，而不是来自于更强的容错能力。
+2. 写死的演示数据或测试数据，在前提明确时可以使用 `try!`。  
+因为这些数据由当前代码完全控制，调用方可以主动保证其合法性。
 
-思考提示：
+3. `try!` 的简洁，主要体现在可以省略常规错误处理样板。  
+例如：
 
-- 如果输入来自外部环境，失败通常是业务中的正常情况。
-- 如果输入由当前代码完全控制，失败往往意味着程序员自己破坏了前提。
-- 在后一类场景中，代码有时会更关注“示例本身”而不是“失败后的恢复逻辑”。
+```swift
+let task = try! parseStudyTask(from: trustedDemoLine)
+print(task)
+```
 
-## 本章作业目标
+这比下面这段更紧凑：
 
-完成这两道题后，你应当能够建立下面这组判断：
+```swift
+do {
+    let task = try parseStudyTask(from: trustedDemoLine)
+    print(task)
+} catch {
+    print(error)
+}
+```
 
-- throwing 函数不仅是在“抛错”，更是在表达失败路径
-- `do-catch` 适合保留并处理详细错误原因
-- `try?` 适合只关心成败的轻量场景
-- `try!` 只适合前提极强、失败应被视为程序错误的少数场景
+4. 但 `try!` 的前提非常强。  
+一旦调用方写下 `try!`，就等于在声明：
 
-如果你在写作业时发现自己总想把所有情况都压成一个 `Bool` 或一句“输入无效”，可以停下来重新问自己：
+- 这里在逻辑上不应失败
+- 如果失败，说明是程序员自己破坏了前提
 
-- 我当前需要的只是一个结果，还是还需要知道失败的原因？
+5. 如果这个前提不成立，程序会在运行时直接出问题。  
+因此，`try!` 并不是“更省事的通用写法”，而是只适用于少数高度可控场景的写法。
+
+## 参考工程说明
+
+如果你想直接运行参考实现，可以打开：
+
+- `exercises/zh-CN/answers/23-error-handling-clear-failure-paths`
+
+其中你会看到两部分内容：
+
+- 练习 1 的完成版：细粒度错误建模与 `do-catch` 分类处理
+- 思考题的对照版：同一份可信示例数据分别用 `do-catch` 与 `try!` 调用

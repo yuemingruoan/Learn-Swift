@@ -4,8 +4,8 @@
 
 - 前置章节：[21. 协议：比继承更灵活的抽象方式](./21-protocols-flexible-abstraction.md)
 - 上一章：[21. 协议：比继承更灵活的抽象方式](./21-protocols-flexible-abstraction.md)
-- 建议下一章：23. 错误处理：让失败路径更清楚（待补充）
-- 下一章：23. 错误处理：让失败路径更清楚（待补充）
+- 建议下一章：[23. 错误处理：让失败路径更清楚](./23-error-handling-clear-failure-paths.md)
+- 下一章：[23. 错误处理：让失败路径更清楚](./23-error-handling-clear-failure-paths.md)
 - 适合谁先读：已经理解协议和基础类型设计，准备学习如何在不改原定义的情况下给类型补充能力的读者
 
 ## 本章目标
@@ -547,4 +547,4 @@ extension StudyTask: DailyBriefPrintable {
 
 这通常会把主线带到：
 
-- 23. 错误处理：让失败路径更清楚（待补充）
+- [23. 错误处理：让失败路径更清楚](./23-error-handling-clear-failure-paths.md)

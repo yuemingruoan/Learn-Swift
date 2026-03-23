@@ -4,8 +4,8 @@
 
 - 前置章节：[08. Optional 入门](./08-optional-basics.md)、[12. 函数与代码复用](./12-functions-and-code-reuse.md)、[22. 扩展：给已有类型补充能力](./22-extensions-adding-capabilities.md)
 - 上一章：[22. 扩展：给已有类型补充能力](./22-extensions-adding-capabilities.md)
-- 建议下一章：24. 泛型：让同一套逻辑适配更多类型（待补充）
-- 下一章：24. 泛型：让同一套逻辑适配更多类型（待补充）
+- 建议下一章：[24. 泛型：让同一套逻辑适配更多类型](./24-generics-reusable-abstractions.md)
+- 下一章：[24. 泛型：让同一套逻辑适配更多类型](./24-generics-reusable-abstractions.md)
 - 适合谁先读：已经能够编写较完整程序，并希望更清楚地区分成功路径与失败路径的读者
 
 ## 本章目标

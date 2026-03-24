@@ -4,8 +4,8 @@
 
 - 前置章节：[16. class 与引用语义：为什么改一个地方，另一个地方也会变](./16-class-and-reference-semantics.md)、[17. 选读：从 Optional 到 ARC，理解 Swift 代码背后的运行规则](./17-optional-to-arc-runtime-rules.md)、[25. 闭包：把函数当成值来传递](./25-closures-functions-as-values.md)
 - 上一章：[27. 协议扩展与默认实现：把抽象和复用放在一起](./27-protocol-extensions-and-default-implementations.md)
-- 建议下一章：29. 并发入门：async/await 与 Task（待补充）
-- 下一章：29. 并发入门：async/await 与 Task（待补充）
+- 建议下一章：[29. 并发入门：async/await 与 Task](./29-concurrency-basics-async-await-and-task.md)
+- 下一章：[29. 并发入门：async/await 与 Task](./29-concurrency-basics-async-await-and-task.md)
 - 适合谁先读：已经理解 `class`、引用语义和闭包捕获，并且愿意进一步追问对象生命周期细节的读者
 
 ## 本章目标
@@ -1037,7 +1037,7 @@ ARC 只根据引用计数工作，不会替你改写持有关系。
 
 如果继续沿这条主线往下走，下一步很自然会进入：
 
-- 29. 并发入门：`async/await` 与 `Task`（待补充）
+- [29. 并发入门：`async/await` 与 `Task`](./29-concurrency-basics-async-await-and-task.md)
 
 因为当你已经理解了：
 

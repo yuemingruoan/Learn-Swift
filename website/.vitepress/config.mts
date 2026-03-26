@@ -202,6 +202,25 @@ function normalizeTarget(rawTarget: string) {
   return rawTarget.replace(/\\/g, "/").replace(/^\.\//, "");
 }
 
+function extractRepoRelativePath(target: string) {
+  const markers = [
+    "docs/zh-CN/chapters/",
+    "exercises/zh-CN/answers/",
+    "demos/",
+    "assets/",
+    "templates/",
+  ];
+
+  for (const marker of markers) {
+    const index = target.indexOf(marker);
+    if (index >= 0) {
+      return target.slice(index);
+    }
+  }
+
+  return null;
+}
+
 function toRepositoryUrl(repoRelativePath: string) {
   const normalizedPath = repoRelativePath.replace(/^\/+/, "");
   const isTreeTarget =
@@ -215,6 +234,7 @@ function toRepositoryUrl(repoRelativePath: string) {
 function transformMarkdownTarget(rawTarget: string) {
   const target = normalizeTarget(rawTarget);
   const repoRootPosix = repoRoot.replace(/\\/g, "/");
+  const embeddedRepoPath = extractRepoRelativePath(target);
 
   if (
     target.startsWith("http://") ||
@@ -235,6 +255,21 @@ function transformMarkdownTarget(rawTarget: string) {
 
   if (target.startsWith("../../../demos/")) {
     return toRepositoryUrl(target.replace("../../../", ""));
+  }
+
+  if (embeddedRepoPath?.startsWith("docs/zh-CN/chapters/")) {
+    return embeddedRepoPath.replace("docs/zh-CN/chapters/", "../chapters/");
+  }
+
+  if (
+    embeddedRepoPath?.startsWith("exercises/zh-CN/answers/") &&
+    embeddedRepoPath.endsWith(".md")
+  ) {
+    return embeddedRepoPath.replace("exercises/zh-CN/answers/", "../answers/");
+  }
+
+  if (embeddedRepoPath) {
+    return toRepositoryUrl(embeddedRepoPath);
   }
 
   if (target.startsWith(`${repoRootPosix}/`)) {

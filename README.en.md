@@ -64,3 +64,86 @@ Learn-Swift/
 - `assets/`: Images and diagrams used by the tutorial.
 - `assets/shared/`: Shared assets.
 - `assets/zh-CN/` and `assets/en/`: Language-specific assets.
+
+## Website Preview And Development
+
+This repository includes a VitePress website project in [website](./website).
+That directory is used to keep the website code and configuration out of the repository root.
+
+### If You Are Developing Content
+
+If you are writing tutorial content or adjusting the website itself, use the VitePress dev server for realtime preview with hot reload:
+
+```bash
+cd website
+npm install
+npm run docs:dev
+```
+
+Then open the local address shown by the VitePress dev server in your browser.
+
+During development, the website reads the original source content directly instead of maintaining duplicated copies:
+
+- `docs/zh-CN/chapters/`
+- `exercises/zh-CN/answers/`
+- `assets/`
+
+That lets you edit the tutorial Markdown and immediately preview the result in the browser.
+
+### If You Are Deploying The Website
+
+If you want to deploy the site to GitHub Pages, your own server, or let other users run it locally, build the static site first:
+
+```bash
+cd website
+npm install
+npm run docs:build
+```
+
+The generated static output is written to:
+
+- `website/dist/`
+
+If you want to verify the built result locally before deployment, run:
+
+```bash
+cd website
+npm run docs:preview
+```
+
+That starts a local static preview server so you can inspect the deployed version of the site.
+
+You can then deploy it in several ways:
+
+- GitHub Pages: use the repository GitHub Actions workflow to build and publish `website/dist/`
+- Self-hosted server: serve `website/dist/` with Nginx, Caddy, or any other static file server
+- Local user deployment: run `website/dist/` with any static server, for example `npx serve website/dist`
+
+If you want to serve the built static files locally yourself, you can also run:
+
+```bash
+npx serve website/dist
+```
+
+### If You Are A Learner
+
+If you only want to study the tutorial in a browser and do not need to contribute content, use a deployed version of the static website.
+
+Learners do not need to:
+
+- install a Markdown renderer
+- understand the repository structure
+- run VitePress development commands
+
+They only need to open the deployed site URL and read the chapters, answers, and images in the browser.
+
+If you already cloned the repository and only want to run the website locally for reading, use:
+
+```bash
+cd website
+npm install
+npm run docs:build
+npm run docs:preview
+```
+
+Then open the local address shown in the terminal and start reading in the browser.

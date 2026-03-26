@@ -62,3 +62,11 @@ fastlane/screenshots/**/*.png
 fastlane/test_output
 
 .DS_Store
+
+# Website
+website/node_modules/
+website/dist/
+website/docs/public/assets/
+website/docs/zh-CN/chapters/
+website/docs/zh-CN/answers/
+website/.vitepress/generated/

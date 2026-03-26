@@ -23,10 +23,10 @@
 ## 本章对应目录
 
 - 本章文稿：`docs/zh-CN/chapters/34-network-requests-and-json.md`
-- 对应项目目录：待补充
-- 练习起始工程：待补充
-- 练习答案文稿：待补充
-- 练习参考工程：待补充
+- 对应项目目录：`demos/projects/34-json-format-and-parsing`
+- 练习起始工程：`exercises/zh-CN/projects/34-json-format-and-parsing-starter`
+- 练习答案文稿：`exercises/zh-CN/answers/34-json-format-and-parsing.md`
+- 练习参考工程：`exercises/zh-CN/answers/34-json-format-and-parsing`
 
 说明：
 

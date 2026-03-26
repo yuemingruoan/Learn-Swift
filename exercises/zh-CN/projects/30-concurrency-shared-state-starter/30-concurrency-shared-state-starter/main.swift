@@ -114,7 +114,7 @@ func runIndependentLoadsDemo() async {
 
     async let loadReminder: String = {
         await pause(nanoseconds: 120_000_000)
-        return "先识别共享状态，再考虑怎么隔离"
+        return "先识别共享状态，再判断属于哪种风险外形"
     }()
 
     let titles = await loadTitles

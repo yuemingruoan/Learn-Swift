@@ -433,6 +433,34 @@ let results = await withTaskGroup(of: String.self, returning: [String].self) { g
 
 取消仍然需要子任务在合适位置响应，但结构化关系会让这件事更自然。
 
+## 本章练习与课后作业
+
+如果你想把这一章的内容真正落实到“把并发工作组织回父流程结构里”上，可以继续完成下面这道重构作业：
+
+- 作业答案：`exercises/zh-CN/answers/32-structured-concurrency.md`
+- 起始工程：`exercises/zh-CN/projects/32-structured-concurrency-starter`
+- 参考答案工程：`exercises/zh-CN/answers/32-structured-concurrency`
+
+starter project 当前已经有并发相关代码，但主要还留着三类问题：
+
+1. `loadOverview()` 里固定数量的两项加载仍然是顺序等待。
+2. `buildChapterSummaries(for:)` 面对动态数量任务时，还是一项一项顺序处理。
+3. 章节摘要加载失败后，错误在内部被吞掉了，没有沿父流程抛回。
+
+请你按下面这些明确目标完成修改：
+
+1. 把 `loadOverview()` 改成 `async let`。
+2. 把 `buildChapterSummaries(for:)` 改成 `async throws`。
+3. 在 `buildChapterSummaries(for:)` 里使用 `withThrowingTaskGroup`。
+4. 在调用点用 `try await + do-catch` 接回错误。
+
+完成后，你的代码至少应该表现出下面这些结果：
+
+- `titles` 和 `reminder` 会先一起启动，再统一取结果。
+- 动态数量的章节摘要会通过循环 `addTask` 创建。
+- 错误不会继续在内部悄悄变成普通字符串。
+- 父流程能够明确拿到“第 32 章摘要缺失”的失败信息。
+
 ## 本章小结
 
 这一章最需要记住的是下面这组关系：

@@ -8,10 +8,6 @@
 
 - `exercises/zh-CN/projects/30-concurrency-shared-state-starter`
 
-如果你想直接运行本章练习的参考工程，也可以打开：
-
-- `exercises/zh-CN/answers/30-concurrency-shared-state`
-
 说明：
 
 - 本章作业不是修复题，而是识别题。
@@ -118,6 +114,6 @@ let answers = ExerciseAnswers(
 1. 先找是不是共享了同一份可变状态。
 2. 再看代码有没有依赖“刚刚读到的旧值”。
 3. 再看代码有没有依赖“刚刚检查过的条件”。
-4. 最后才去想：应该怎样隔离、重构或修复。
+4. 到这里先停住，暂时不进入隔离、重构或修复。
 
 这也是为什么下一章会自然接着讲 `actor`。

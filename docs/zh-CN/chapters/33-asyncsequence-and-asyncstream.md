@@ -430,6 +430,30 @@ let stream = AsyncStream<Int> { continuation in
 
 流的结束和取消边界同样是模型的一部分。
 
+## 本章练习与课后作业
+
+如果你想把这一章的内容真正落实到“把回调式持续事件整理成异步流”上，可以继续完成下面这道桥接作业：
+
+- 作业答案：`exercises/zh-CN/answers/33-asyncsequence-and-asyncstream.md`
+- 起始工程：`exercises/zh-CN/projects/33-asyncsequence-and-asyncstream-starter`
+- 参考答案工程：`exercises/zh-CN/answers/33-asyncsequence-and-asyncstream`
+
+starter project 当前已经有一个会持续推送事件的生产者，但整条链路还没有接通。
+
+请你按下面这些明确目标完成修改：
+
+1. 在 `makeEventStream(from:)` 里把 `producer.onValue` 接到 `continuation.yield(...)`。
+2. 在 `producer.onFinish` 里调用 `continuation.finish()`。
+3. 在 `continuation.onTermination` 里清理回调。
+4. 在 `consumeAllEvents(from:)` 里用 `for await` 逐项消费这条流。
+
+完成后，你的代码至少应该表现出下面这些结果：
+
+- 生产者发出的每一条事件都会进入 `AsyncStream`。
+- 生产完成后，流会正常结束。
+- 消费端会逐条打印事件，而不是一次性拿到全部结果。
+- 流结束后，生产者身上的回调不会继续残留。
+
 ## 本章小结
 
 这一章最需要记住的是下面这组关系：

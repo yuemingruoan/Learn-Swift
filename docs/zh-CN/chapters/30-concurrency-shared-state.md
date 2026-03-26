@@ -17,14 +17,13 @@
 - 理解竞态条件最基础的含义
 - 区分“多个任务同时运行”和“多个任务同时修改同一份可变数据”这两件事
 - 知道为什么值类型、引用类型、数组、字典在并发场景下都可能牵涉共享状态
-- 建立“先找共享状态，再决定怎么隔离它”的基本分析顺序
+- 建立“先找共享状态，再区分风险外形”的基本分析顺序
 
 ## 本章对应目录
 
 - 对应项目目录：`demos/projects/30-concurrency-shared-state`
 - 练习起始工程：`exercises/zh-CN/projects/30-concurrency-shared-state-starter`
 - 练习答案文稿：`exercises/zh-CN/answers/30-concurrency-shared-state.md`
-- 练习参考工程：`exercises/zh-CN/answers/30-concurrency-shared-state`
 
 建议你这样使用：
 
@@ -37,7 +36,6 @@
 - `demos/projects/30-concurrency-shared-state`：先建立“共享状态风险长什么样”的直觉。
 - `exercises/zh-CN/projects/30-concurrency-shared-state-starter`：再对照多个案例，练习区分哪些真的危险，哪些只是并发推进。
 - `exercises/zh-CN/answers/30-concurrency-shared-state.md`：做完后对照每个案例为什么这样分类。
-- `exercises/zh-CN/answers/30-concurrency-shared-state`：最后运行参考工程，核对案例名字和分类结果。
 
 ## 先看本章最常见的通用代码外形
 
@@ -437,7 +435,7 @@ final class WorkshopCenter {
 1. 先找出哪份状态会变
 2. 再看这份状态是不是会被多个任务共同访问
 3. 再判断这些访问里，是否存在“读旧值再写新值”或“先检查再修改”这种模式
-4. 最后再决定应该怎么隔离或重构
+4. 最后先停在“风险识别完成”这一步，修复方案留到下一章
 
 这个顺序非常重要，因为很多初学者一上来会反过来：
 
@@ -523,6 +521,35 @@ final class WorkshopCenter {
 - 不稳定
 - 难稳定复现
 - 但一旦出现，就说明边界有问题
+
+## 本章练习与课后作业
+
+如果你想继续锻炼“看代码识别并发风险外形”的能力，可以完成下面这道分类作业：
+
+- 作业答案：`exercises/zh-CN/answers/30-concurrency-shared-state.md`
+- 起始工程：`exercises/zh-CN/projects/30-concurrency-shared-state-starter`
+
+starter project 当前已经准备好了 5 个案例：
+
+- `IndependentLoads`
+- `FinishedCountStore.markFinished`
+- `NotesStore.append`
+- `ProgressCache.update`
+- `WorkshopCenter.register`
+
+这一题的重点不是立刻修复它们，而是只完成下面这几类判断：
+
+1. 哪些案例共享了同一份可变状态。
+2. 哪些案例属于“先读后写”。
+3. 哪些案例属于“先检查再修改”。
+4. 哪些案例虽然并发推进，但其实没有共享状态风险。
+
+也就是说，这一题最重要的不是“怎么改”，而是先建立下面这套分析顺序：
+
+1. 先找有没有真正的共享可变状态。
+2. 再看代码是否依赖刚刚读到的旧值。
+3. 再看代码是否依赖刚刚检查过的条件。
+4. 到这里先停住，暂时不进入隔离、actor 或重构方案。
 
 ## 本章小结
 

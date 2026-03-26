@@ -189,6 +189,11 @@ function syncSidebarDataPlugin() {
 writeGeneratedSidebarData();
 
 function inferBase() {
+  const explicitBase = process.env.WEBSITE_BASE?.trim();
+  if (explicitBase) {
+    return explicitBase;
+  }
+
   const repository = process.env.GITHUB_REPOSITORY;
   if (!repository) {
     return "/";

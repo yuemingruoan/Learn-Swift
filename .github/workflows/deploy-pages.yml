@@ -34,11 +34,15 @@ jobs:
         run: npm ci
 
       - name: Build website
+        env:
+          WEBSITE_BASE: /
         working-directory: website
         run: npm run docs:build
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

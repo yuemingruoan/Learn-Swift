@@ -4,8 +4,8 @@
 
 - 前置章节：[23. 错误处理：让失败路径更清楚](./23-error-handling-clear-failure-paths.md)、[25. 闭包：把函数当成值来传递](./25-closures-functions-as-values.md)、[28. 选读：ARC 进阶：weak、unowned 与循环引用](./28-arc-advanced-weak-unowned-and-capture-lists.md)
 - 上一章：[28. 选读：ARC 进阶：weak、unowned 与循环引用](./28-arc-advanced-weak-unowned-and-capture-lists.md)
-- 建议下一章：30. 并发中的共享状态：当多个任务同时改数据时会发生什么（待补充）
-- 下一章：30. 并发中的共享状态：当多个任务同时改数据时会发生什么（待补充）
+- 建议下一章：[30. 并发中的共享状态：当多个任务同时改数据时会发生什么](./30-concurrency-shared-state.md)
+- 下一章：[30. 并发中的共享状态：当多个任务同时改数据时会发生什么](./30-concurrency-shared-state.md)
 - 适合谁先读：已经理解函数、错误处理、闭包捕获和对象生命周期，并且想开始读懂异步代码的读者
 
 ## 本章目标
@@ -1501,7 +1501,7 @@ do {
 
 如果继续沿这条主线往下走，下一步很自然会进入：
 
-- 30. 并发中的共享状态：当多个任务同时改数据时会发生什么（待补充）
+- [30. 并发中的共享状态：当多个任务同时改数据时会发生什么](./30-concurrency-shared-state.md)
 
 因为当你已经理解了：
 

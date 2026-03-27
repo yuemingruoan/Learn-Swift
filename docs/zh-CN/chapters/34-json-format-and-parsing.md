@@ -2,79 +2,58 @@
 
 ## 阅读导航
 
-- 前置章节：[14. 数组与字典：列表与键值对](./14-arrays-and-dictionaries.md)、[23. 错误处理：让失败路径更清楚](./23-error-handling-clear-failure-paths.md)、[29. 并发入门：async/await 与 Task](./29-concurrency-basics-async-await-and-task.md)、[33. 异步序列：AsyncSequence 与 AsyncStream](./33-asyncsequence-and-asyncstream.md)
-- 上一章：[33. 异步序列：AsyncSequence 与 AsyncStream](./33-asyncsequence-and-asyncstream.md)
-- 建议下一章：35. JSON 进阶：字段映射与复杂结构（待补充）
-- 下一章：35. JSON 进阶：字段映射与复杂结构（待补充）
-- 适合谁先读：已经理解数组、字典、最基础自定义类型和错误处理，准备先把 JSON 这种常见数据格式看懂的读者
+- **前置章节**：[14. 数组与字典](./14-arrays-and-dictionaries.md)、[23. 错误处理](./23-error-handling-clear-failure-paths.md)、[29. 并发入门](./29-concurrency-basics-async-await-and-task.md)
+- **上一章**：[33. 异步序列](./33-asyncsequence-and-asyncstream.md)
+- **下一章**：35. JSON 进阶：字段映射与复杂结构（待补充）
+- **适合人群**：已理解数组、字典、基础自定义类型和错误处理，准备上手处理常见数据格式的读者。
 
 ## 本章目标
 
-学完当前这一部分后，你应该能够：
+学完本章后，你将能够：
 
-- 理解为什么 JSON 会频繁出现在配置和数据交换场景里
-- 知道 JSON 最核心的组织方式是 key-value 结构
-- 看懂 JSON 对象、数组、字符串、数字、布尔值和 `null`
-- 理解 JSON 对象和 Swift 字典在直觉上的相似之处
-- 知道 Swift 里解析 JSON 最常见的两条路线：`JSONSerialization` 和 `JSONDecoder`
-- 看懂 `JSONSerialization.jsonObject(with:)` 的最基础语法
-- 看懂 `JSONDecoder().decode(_:from:)` 的最基础语法
-- 知道 `try`、`Data`、`.self` 在 JSON 解析场景里分别在表达什么
+- 理解 JSON 为何成为配置和数据交换的主流格式。
+- 掌握 JSON 的核心结构：对象（Object）、数组（Array）及基础数据类型。
+- 理解 JSON 与 Swift 字典、数组的异同。
+- 掌握 Swift 中解析 JSON 的两种主要方式：`JSONSerialization` 和 `JSONDecoder`。
+- 理解 `try`、`Data`、`.self` 在解析场景中的具体含义。
 
-## 本章对应目录
+## 本章对应资源
 
-- 本章文稿：`docs/zh-CN/chapters/34-json-format-and-parsing.md`
-- 对应项目目录：`demos/projects/34-json-format-and-parsing`
-- 练习起始工程：`exercises/zh-CN/projects/34-json-format-and-parsing-starter`
-- 练习答案文稿：`exercises/zh-CN/answers/34-json-format-and-parsing.md`
-- 练习参考工程：`exercises/zh-CN/answers/34-json-format-and-parsing`
+- **文稿**：`docs/zh-CN/chapters/34-json-format-and-parsing.md`
+- **示例项目**：`demos/projects/34-json-format-and-parsing`
+- **练习起始工程**：`exercises/zh-CN/projects/34-json-format-and-parsing-starter`
+- **练习答案**：`exercises/zh-CN/answers/34-json-format-and-parsing.md`
 
-说明：
+> **说明**：本章聚焦"JSON 格式入门”和“基础解析语法”。复杂的字段映射和数据建模将在下一章展开。
 
-- 本章当前只聚焦“JSON 格式入门”和“Swift 里的基础解析语法”。
-- 更复杂的字段映射和数据建模，放到下一章单独展开。
+## 为什么先单独学习 JSON？
 
-## 为什么先单独学习 JSON
+初学者接触 JSON 时，容易混淆两个问题：
 
-很多初学者第一次接触 JSON 数据时，会把两件事混在一起：
+1. 数据本身长什么样？
+2. 数据是怎么进入程序的？
 
-- 数据是怎么进入程序的
-- 数据本身长什么样
+因此本章将按照**先看懂 JSON 结构，再学习如何接入处理流程**的结构讲解
 
-但这两件事其实不是同一个问题。
+毕竟如果连数据结构都看不清，即使拿到了原始内容，也容易陷入“知道有数据，但不知道怎么用”的模糊状态。
 
-更稳妥的学习顺序通常是：
+因此，本章我们将注意力集中在：
 
-1. 先看懂 JSON 这种常见数据格式
-2. 再学习怎样把它接到更完整的数据处理流程里
+- JSON 到底是什么？
+- 它为什么通常是 key-value 结构？
+- 进入 Swift 后如何被解析？
 
-因为如果你连数据本身的结构都还看不清，那么后面即使已经拿到原始内容，也很容易停在一种模糊状态：
+## 为什么 JSON 这么常见？
 
-- 知道程序已经拿到一段内容
-- 但不知道这段内容到底该怎样理解
+结论很简单：**JSON 是主流的数据交换格式。**
 
-所以这一章先把注意力收缩到：
-
-- JSON 到底是什么
-- 它为什么经常长成 key-value 的样子
-- 它进入 Swift 之后通常怎样被解析
-
-## 为什么 JSON 这么常见
-
-先说一个最实用的结论：
-
-- JSON 是一种非常常见的数据交换格式
-
-你会在很多地方看到它，例如：
-
-- 数据文件
-- 本地配置文件
-- 缓存数据
+你会在以下场景频繁遇到它：
+- 配置文件
+- 网络接口返回数据
+- 本地缓存
 - 导入导出的结构化文本
 
-## 先看一个最小 JSON 例子
-
-例如你可能会看到下面这样一段数据：
+### 最小 JSON 示例
 
 ```json
 {
@@ -84,43 +63,36 @@
 }
 ```
 
-这段 JSON 表达的是一条学习任务。
+这段 JSON 描述了一条学习任务。先观察它的结构特征：
 
-当前阶段你先重点观察它的外形：
+- 最外层是 `{ ... }`。
+- 内部包含三组“名字 : 值”。
+- 每组数据由字段名和对应内容组成。
 
-- 最外层是 `{ ... }`
-- 里面有三组“名字 : 值”
-- 每一组数据都由一个字段名和对应内容组成
+这就是 JSON 的核心组织方式：**键值对（key-value）结构**。
 
-这就是 JSON 最核心的组织方式之一：
+### 什么是 key-value 结构？
 
-- **key-value 结构**
+- **key（键）**：字段名，表示“这项数据叫什么”。
+- **value（值）**：字段值，表示“这项数据具体是多少”。
 
-## 什么是 key-value 结构
+例如上面的 JSON 中：
+- `title` 是 key，`"复习闭包"` 是 value。
+- `estimatedHours` 是 key，`2` 是 value。
+- `isFinished` 是 key，`false` 是 value。
 
-可以先把 key-value 近似理解成：
+概括来说，JSON 描述了一组“字段名 -> 对应值”的关系。
 
-- key：字段名，也就是“这一项数据叫什么”
-- value：字段值，也就是“这一项数据具体是多少”
+## JSON 的核心结构
 
-例如刚才那段 JSON 里：
+### 1. JSON 对象（Object）
 
-- `title` 是 key
-- `"复习闭包"` 是 value
+只要你看到 `{ ... }` 包裹的内容，就可以认定这是一个 **JSON 对象**。
 
-- `estimatedHours` 是 key
-- `2` 是 value
+json对象有这些特征:
 
-- `isFinished` 是 key
-- `false` 是 value
-
-所以如果把整段 JSON 用一句话概括，可以先理解成：
-
-- 它在描述一组“字段名 -> 对应值”的关系
-
-## JSON 对象：最常见的 key-value 容器
-
-在 JSON 里，只要你看到：
+- 由多个 key-value 对组成。
+- **key 必须是字符串**。
 
 ```json
 {
@@ -129,28 +101,10 @@
 }
 ```
 
-就可以先建立一个稳定直觉：
-
-- 这是一个 JSON 对象
-
-对象最重要的特征就是：
-
-- 使用 `{}` 包起来
-- 里面由多个 key-value 对组成
-- key 必须是字符串
-
-例如上面这段里：
-
-- `"name"` 是 key
-- `"Alice"` 是 value
-- `"score"` 是 key
-- `95` 是 value
-
-## JSON 数组：把多个值排成列表
-
-除了对象，JSON 里另一种非常常见的结构是数组。
-
-例如：
+### 2. JSON 数组（Array）
+另一种常见结构是数组，用 `[ ... ]` 表示。
+- 元素按顺序排列。
+- 元素可以是字符串、数字、对象，甚至是嵌套数组。
 
 ```json
 [
@@ -160,7 +114,7 @@
 ]
 ```
 
-或者：
+**常见场景**：最外层是数组，数组内每个元素是一个对象。这通常对应一组任务、一组课程或一组用户。
 
 ```json
 [
@@ -175,133 +129,43 @@
 ]
 ```
 
-这里最值得先记住的是：
+### 3. 基础数据类型
 
-- 数组用 `[]` 表示
-- 数组里的元素按顺序排列
-- 元素可以是字符串、数字、对象，甚至还是数组
+你只需要认识以下最常见的值类型：
 
-所以你会看到一种非常常见的真实返回格式：
+1. **字符串**：`"Swift"`
+2. **数字**：`24`, `3.14`
+3. **布尔值**：`true`, `false`
+4. **null**：`null`（表示没有值，注意不同于 Swift 的 `nil`）
+5. **对象**：`{ ... }`
+6. **数组**：`[ ... ]`
 
-- 最外层是数组
-- 数组里的每个元素都是对象
-
-这通常就对应：
-
-- 一组任务
-- 一组课程
-- 一组用户
-
-## JSON 里最常见的值类型
-
-当前阶段不需要把 JSON 规范背下来，但至少要认识下面这些最常见的值：
-
-### 1. 字符串
-
-```json
-"Swift"
-```
-
-### 2. 数字
-
-```json
-24
-```
-
-```json
-3.14
-```
-
-### 3. 布尔值
-
-```json
-true
-```
-
-```json
-false
-```
-
-### 4. `null`
-
-```json
-null
-```
-
-它表示：
-
-- 这里没有值
-- 不是`nil`，这点和`Swift`不太一样
-
-### 5. 对象
+**嵌套结构**：JSON 的 value 可以是对象或数组，从而形成树状结构。
 
 ```json
 {
-  "title": "复习泛型"
-}
-```
-
-### 6. 数组
-
-```json
-[
-  1,
-  2,
-  3
-]
-```
-
-你可以先把这一组东西记成：
-
-- JSON 的 value 不一定只是一个简单值
-- value 也可以继续是对象或数组
-
-## 对象和数组可以继续嵌套
-
-这也是 JSON 很常见的一点。
-
-例如：
-
-```json
-{
-  "boardTitle": "今日学习看板",
-  "tasks": [
+   "boardTitle": "今日学习看板",
+   "tasks": [
     {
-      "title": "复习闭包",
-      "estimatedHours": 2
-    },
-    {
-      "title": "整理并发笔记",
-      "estimatedHours": 1
+       "title": "复习闭包",
+       "estimatedHours": 2
     }
   ],
-  "owner": {
-    "name": "Alice",
-    "level": "beginner"
+   "owner": {
+     "name": "Alice",
+     "level": "beginner"
   }
 }
 ```
+- `boardTitle` 是字符串。
+- `tasks` 是数组。
+- `owner` 是对象。
 
-这里要建立的直觉是：
+## JSON 与 Swift 的对应关系
 
-- `boardTitle` 对应的是一个字符串
-- `tasks` 对应的是一个数组
-- `owner` 对应的是一个对象
-
-所以 JSON 的核心不只是“有 key-value”，而是：
-
-- 一个 value 还可以继续展开成下一层结构
-
-这就是为什么你在真实项目里，经常会看到一份 JSON 长得像一棵树。
-
-## JSON 和 Swift 字典、数组像在哪里
-
-如果你前面已经学过数组和字典，那这里可以先建立一个非常有帮助的类比：
-
-- JSON 对象，直觉上很像 Swift 里的字典
-- JSON 数组，直觉上很像 Swift 里的数组
-
-例如这段 JSON：
+如果你学过数组和字典，可以建立以下直觉：
+- **JSON 对象** ≈ **Swift 字典**
+- **JSON 数组** ≈ **Swift 数组**
 
 ```json
 {
@@ -310,7 +174,7 @@ null
 }
 ```
 
-很容易让你联想到：
+这很容易让人联想到 Swift 字典：
 
 ```swift
 [
@@ -319,34 +183,11 @@ null
 ]
 ```
 
-这种直觉是有帮助的，因为它能让你快速理解：
+**注意**：这只是直觉类比。JSON 是独立的数据格式，不能直接把 Swift 字典当成 JSON 原文，反之亦然。
 
-- JSON 对象本质上也是“字段名对应字段值”
+### 关键桥梁：Data
 
-但这里也要立刻补一个边界：
-
-- JSON 不是 Swift 字典语法
-- JSON 是一种独立的数据格式
-
-所以你不能把 Swift 字典直接当成 JSON 原文，也不能把 JSON 原文直接当成 Swift 代码。
-
-## JSON 原文进入 Swift 之后，通常先是 `Data`
-
-这一点很关键。
-
-程序读到的 JSON 通常不是一个已经现成排好的 Swift 字典，也不是一个现成结构体，而是：
-
-- 一段原始字节数据
-
-在 Swift 里，这通常会落在：
-
-```swift
-Data
-```
-
-也就是说，JSON 在真正被解析之前，经常先以 `Data` 的形式存在。
-
-如果只是为了教学演示，我们也可以手动把 JSON 字符串转成 `Data`：
+JSON 原文进入 Swift 程序后，通常不会直接变成字典或结构体，而是先表现为 **原始字节数据**，即 `Data` 类型。
 
 ```swift
 let jsonText = """
@@ -357,64 +198,31 @@ let jsonText = """
 }
 """
 
+// 字符串转 Data
 let jsonData = jsonText.data(using: .utf8)!
 ```
 
-这里可以先这样理解：
+- `jsonText` 是字符串（便于阅读）。
+- `jsonData` 是解析函数真正的输入。
 
-- `jsonText` 是字符串
-- `jsonData` 才是后面解析函数真正要吃进去的输入
--  `using: .utf8` 代表使用`utf-8`格式解析json字符串
+## Swift 中的 JSON 解析路线
 
-## 先看最原始的 JSON 解析路线：`JSONSerialization`
+### 路线一：JSONSerialization（基础/底层）
 
-Swift 里一条比较基础的 JSON 解析路线是：
+#### 基础语法
 
-```swift
-JSONSerialization
-```
-
-最常见的入门写法如下：
+这是系统提供的基础解析工具。
 
 ```swift
 let object = try JSONSerialization.jsonObject(with: jsonData)
 ```
+- `JSONSerialization`：解析工具。
+- `jsonObject(with:)`：将 `Data` 解析为通用对象。
+- `try`：解析可能失败（格式错误、数据非法等）。
 
-这行代码的意思可以拆成三部分来看：
+#### 返回值
 
-1. `JSONSerialization`
-   这是系统提供的一个 JSON 解析工具。
-
-2. `jsonObject(with: jsonData)`
-   表示：把这段 `Data` 解析成一个通用对象。
-
-3. `try`
-   表示：解析过程可能失败。
-
-例如：
-
-- JSON 格式本身不合法
-- 数据不是合法 JSON
-
-都可能导致这里抛错。
-
-## `jsonObject(with:)` 返回的为什么不是现成结构体
-
-这是初学者很容易疑惑的一点。
-
-先看这句：
-
-```swift
-let object = try JSONSerialization.jsonObject(with: jsonData)
-```
-
-这里的 `object` 并不是一个已经类型很明确的 `StudyTask`，而更像是：
-
-- 一个“我先帮你把 JSON 解析出来了，但具体类型你自己再确认”的通用结果
-
-因此它的结果通常要继续配合类型转换使用。
-
-例如，如果最外层是对象，可以写成：
+`object` 不是明确的 `StudyTask` 类型，而是一个通用结果，通常需要配合类型转换：
 
 ```swift
 if let dictionary = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
@@ -422,103 +230,18 @@ if let dictionary = try JSONSerialization.jsonObject(with: jsonData) as? [String
 }
 ```
 
-这里最值得注意的是：
+- `as? [String: Any]`：尝试将结果视为“键为字符串、值为任意类型”的字典。
+- 如果外层是数组，则转换为 `[[String: Any]]`。
 
-- `as? [String: Any]`
+####  局限性：
 
-它表示：
+虽然能用，但代码繁琐。你需要手动判断外层结构、手动转换类型、手动取 key。字段一多，嵌套判断会让代码变得难以维护。
 
-- 尝试把解析结果当成“键是字符串、值是任意类型”的字典
+### 路线二：JSONDecoder（推荐/现代）
 
-如果最外层其实是数组，常见写法又会变成：
+更常见的做法是：**定义模型类型，让解码器直接转换。**
 
-```swift
-if let array = try JSONSerialization.jsonObject(with: jsonData) as? [[String: Any]] {
-    print(array.count)
-}
-```
-
-所以你可以先留下这样一个印象：
-
-- `JSONSerialization` 能帮你把 JSON 打开
-- 但打开之后，很多结构还需要你自己判断和转换
-
-## 先把 `as?` 的含义看清楚
-
-前面这一句：
-
-```swift
-as? [String: Any]
-```
-
-如果你一眼看不懂，不要急着把它整体死记。
-
-当前阶段先拆成两部分：
-
-- `as?`
-- `[String: Any]`
-
-其中：
-
-- `[String: Any]` 表示一个字典
-- key 是 `String`
-- value 是 `Any`
-
-也就是说，它表达的是：
-
-- 一个字段名是字符串、字段值可能有多种类型的容器
-
-而：
-
-- `as?`
-
-表示：
-
-- 尝试把当前值当成这种类型
-
-如果成功，就得到转换后的结果；如果失败，就得到 `nil`。
-
-所以这一整句可以先近似理解成：
-
-- 试试看，这个 JSON 解析结果能不能被当成一个字典来看
-
-## 为什么 `JSONSerialization` 只适合做“最基础的结构理解”
-
-`JSONSerialization` 并不是不能用，但对初学者来说，它很容易把注意力拖进这些细节里：
-
-- 到处判断最外层是字典还是数组
-- 到处写 `[String: Any]`
-- 到处手动取 key
-- 到处手动做类型转换
-
-例如：
-
-```swift
-if let dictionary = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
-   let title = dictionary["title"] as? String,
-   let estimatedHours = dictionary["estimatedHours"] as? Int,
-   let isFinished = dictionary["isFinished"] as? Bool {
-    print(title, estimatedHours, isFinished)
-}
-```
-
-这种写法可以工作，但你很快就会发现：
-
-- 字段一多，手动解析会越来越啰嗦
-- 结构一复杂，嵌套判断会越来越乱
-
-所以在真正写应用代码时，更常见的路线通常是：
-
-- `JSONDecoder`
-
-## 更常见的解析路线：`JSONDecoder`
-
-相比手动从 `[String: Any]` 里一个个取值，Swift 更常见的写法是：
-
-- 先定义一个能承接 JSON 结构的类型
-- 再用 `JSONDecoder` 直接解码
-
-最基础的例子如下：
+#### 1. 定义模型
 
 ```swift
 struct StudyTaskDTO: Decodable {
@@ -527,114 +250,32 @@ struct StudyTaskDTO: Decodable {
     let isFinished: Bool
 }
 ```
+- `Decodable` 协议：表示该类型可以从外部数据解码。
 
-这里你可以先把 `Decodable` 理解成：
-
-- 这个类型允许自己从外部数据里被解码出来
-
-然后配合：
+#### 2. 执行解码
 
 ```swift
 let decoder = JSONDecoder()
 let task = try decoder.decode(StudyTaskDTO.self, from: jsonData)
 ```
+这句代码的含义：**试着把 `jsonData` 解码成 `StudyTaskDTO` 类型。**
 
-这段代码的阅读顺序可以先固定成：
+关键点解析：
 
-- 创建一个解码器
-- 告诉它要解成什么类型
-- 把 `Data` 交给它
+1. **`try`**：解码可能失败（缺字段、类型不匹配、非法 JSON）。
+2. **`StudyTaskDTO.self`**：传入类型本身。解码器需要知道目标类型。
+3. **`from: jsonData`**：指定输入数据。
 
-## `decode(_:from:)` 这句语法到底在说什么
+#### 3. 字段匹配
 
-这是本章非常关键的一句。
+解码成功的前提是**字段名一致**：
 
-```swift
-let task = try decoder.decode(StudyTaskDTO.self, from: jsonData)
-```
+- JSON 的 `title` 对应 Swift 的 `title`。
+- JSON 的 `estimatedHours` 对应 Swift 的 `estimatedHours`。
 
-你可以把它直接翻成一句中文：
+> 注：如果字段名不一致，后续章节会介绍 `CodingKeys` 进行映射。
 
-- 试着把 `jsonData` 解码成 `StudyTaskDTO` 类型
-
-这里的三个关键点分别是：
-
-### 1. `try`
-
-表示：
-
-- 解码可能失败
-
-例如：
-
-- JSON 缺字段
-- 字段类型不匹配
-- 根本不是合法 JSON
-
-### 2. `StudyTaskDTO.self`
-
-它表示：
-
-- 这里传入的是“类型本身”
-
-当前阶段你先不用把 `.self` 理解得太底层，只要先记住：
-
-- `decode` 不只是要数据
-- 它还要知道“应该把数据解成什么类型”
-
-因此这里写的不是某个实例，而是：
-
-- `StudyTaskDTO` 这个类型本身
-
-### 3. `from: jsonData`
-
-表示：
-
-- 输入数据来自这段 `jsonData`
-
-所以整句拼起来就是：
-
-- 试着把这段 `jsonData` 按 `StudyTaskDTO` 的结构解出来
-
-## 为什么这里的字段名要和 JSON 对上
-
-先看 JSON：
-
-```json
-{
-  "title": "复习闭包",
-  "estimatedHours": 2,
-  "isFinished": false
-}
-```
-
-再看结构体：
-
-```swift
-struct StudyTaskDTO: Decodable {
-    let title: String
-    let estimatedHours: Int
-    let isFinished: Bool
-}
-```
-
-这两个能直接对应起来，一个很重要的原因就是：
-
-- 字段名一致
-
-也就是说：
-
-- JSON 里的 `title` 对上 Swift 里的 `title`
-- JSON 里的 `estimatedHours` 对上 Swift 里的 `estimatedHours`
-- JSON 里的 `isFinished` 对上 Swift 里的 `isFinished`
-
-当前阶段先记住这个最简单版本就够了。
-
-后面如果字段名不一致，再引入 `CodingKeys` 这类工具。
-
-## 一个最小的完整解码例子
-
-把前面的内容合在一起，可以得到下面这段最基础示例：
+#### 4. 完整示例
 
 ```swift
 import Foundation
@@ -654,7 +295,6 @@ let jsonText = """
 """
 
 let jsonData = jsonText.data(using: .utf8)!
-
 let decoder = JSONDecoder()
 let task = try decoder.decode(StudyTaskDTO.self, from: jsonData)
 
@@ -662,145 +302,72 @@ print(task.title)
 print(task.estimatedHours)
 print(task.isFinished)
 ```
+**流程总结**：
 
-值得注意的是：
+JSON 文本 -> `Data` -> `JSONDecoder` -> 类型明确的结构体。
 
-- JSON 原文先变成 `Data`
-- `JSONDecoder` 负责把 `Data` 解码成结构体
-- 解码结果已经不再是 `[String: Any]`
-- 而是一个字段清楚、类型清楚的 `StudyTaskDTO`
+#### 5. 数组解码
 
-## 再看一个数组解码例子
-
-如果这份 JSON 表达的不是一条任务，而是一组任务，那么最外层很可能就是数组：
-
+如果 JSON 最外层是数组：
 ```json
 [
-  {
-    "title": "复习闭包",
-    "estimatedHours": 2,
-    "isFinished": false
-  },
-  {
-    "title": "学习 JSON",
-    "estimatedHours": 1,
-    "isFinished": true
-  }
+  { "title": "任务 1", ... },
+  { "title": "任务 2", ... }
 ]
 ```
-
-此时解码写法会变成：
+解码代码只需调整目标类型：
 
 ```swift
 let tasks = try decoder.decode([StudyTaskDTO].self, from: jsonData)
 ```
 
-这里的：
+- `[StudyTaskDTO].self`：表示目标是一个结构体数组。
+- **快速记忆**：`decode` 的第一个参数描述的是 JSON 的**根结构**。外层是对象传对象类型，外层是数组传数组类型。
 
-```swift
-[StudyTaskDTO].self
-```
+#### 6. 封装解析逻辑
 
-表示：
-
-- 目标类型不再是单个 `StudyTaskDTO`
-- 而是“由多个 `StudyTaskDTO` 组成的数组”
-
-所以你也能顺便建立一个很重要的直觉：
-
-- `decode` 的第一参数，描述的就是整个 JSON 根结构
-
-如果 JSON 最外层是对象，就传对象类型。
-
-如果 JSON 最外层是数组，就传数组类型。
-
-## 可以把解码逻辑收进一个函数
-
-前面我们已经学过函数的价值，所以这里也可以很自然地把解析流程收拢起来。
-
-例如：
+在实际编码中我们更建议将解析逻辑封装为函数，使流程更清晰：
 
 ```swift
 func parseTask(from data: Data) throws -> StudyTaskDTO {
     let decoder = JSONDecoder()
     return try decoder.decode(StudyTaskDTO.self, from: data)
 }
-```
 
-这个函数的意思是：
-
-- 输入一段 `Data`
-- 输出一个解码后的 `StudyTaskDTO`
-- 如果解码失败，就把错误继续抛出去
-
-如果要解析任务数组，也可以写成：
-
-```swift
 func parseTasks(from data: Data) throws -> [StudyTaskDTO] {
     let decoder = JSONDecoder()
     return try decoder.decode([StudyTaskDTO].self, from: data)
 }
 ```
+这不仅减少了重复代码，更重要的是将"JSON 解析”明确为一个独立步骤，便于后续接入完整的数据处理流程。
 
-这两段函数的价值不只是“少写两行代码”，更重要的是：
+## 本章核心印象
 
-- 你把“JSON 解析”这件事单独收拢成了一个明确步骤
-
-后面再把它接到更完整的数据处理流程里时，结构会清楚很多。
-
-## 当前部分最需要先建立的印象
-
-如果你现在只先记住下面这些点，这一部分就已经达到目标了：
-
-- JSON 是一种很常见的数据交换格式
-- JSON 最核心的组织方式之一是 key-value
-- JSON 对象像字典，JSON 数组像列表
-- JSON 在 Swift 里常常先表现成 `Data`
-- `JSONSerialization` 可以先把 JSON 打开成通用结构
-- `JSONDecoder` 更适合把 JSON 直接解成结构体
-- `decode(_:from:)` 的意思是“把这段 `Data` 解成指定类型”
+如果你只记住以下几点，本章目标就已达成：
+1. **JSON 格式**：核心是 key-value，对象像字典，数组像列表。
+2. **数据形态**：在 Swift 中通常先表现为 `Data`。
+3. **解析工具**：`JSONSerialization` 适合查看原始结构，`JSONDecoder` 适合转为模型。
+4. **解码语法**：`decode(_:from:)` 意为“把这段 Data 解成指定类型”。
 
 ## 本节小结
 
-这一部分最重要的是先熟悉下面这条链路：
+熟悉这条链路至关重要：
 
-- 原始 JSON 文本或字节数据进入程序
-- JSON 进入 Swift 后通常先是 `Data`
-- 你可以用 `JSONSerialization` 理解最原始结构
-- 更常见的是用 `JSONDecoder` 直接把数据解成 `Decodable` 类型
+**原始 JSON 数据 -> Swift 中的 `Data` -> `JSONDecoder` -> `Decodable` 结构体**
 
-只要这条链路先建立起来，后面再继续进入：
-
-- 文件读写里的 JSON
-- 程序输入里的 JSON
-- 更复杂的嵌套结构和字段映射
-
-就会顺很多。
+建立这个认知后，后续学习文件读写、网络请求中的 JSON 处理，以及更复杂的嵌套结构，都会顺畅很多。
 
 ## 本章练习与课后作业
 
-如果你想继续巩固“理解 JSON 格式并把它解析成 Swift 类型”上，可以继续完成下面这道解码练习：
+请基于 `34-json-format-and-parsing-starter` 工程完成以下解码练习：
 
-- 作业答案：`exercises/zh-CN/answers/34-json-format-and-parsing.md`
-- 起始工程：`exercises/zh-CN/projects/34-json-format-and-parsing-starter`
-- 参考答案工程：`exercises/zh-CN/answers/34-json-format-and-parsing`
+### 任务目标
+1. 在 `decodeTask(from:)` 中将 `Data` 解为 `StudyTaskDTO`。
+2. 在 `decodeChapterNotes(from:)` 中将 `Data` 解为 `[ChapterNoteDTO]`。
+3. 在 `decodeBoard(from:)` 中将 `Data` 解为 `StudyBoardDTO`。
+4. 完善打印函数，按字段输出解析结果。
 
-starter project 当前已经提供了三段原始 JSON：
-
-- 单个对象 JSON
-- 数组根结构 JSON
-- 嵌套对象和对象数组组成的看板 JSON
-
-请你按下面这些明确目标完成修改：
-
-1. 在 `decodeTask(from:)` 里把 `Data` 解成 `StudyTaskDTO`。
-2. 在 `decodeChapterNotes(from:)` 里把 `Data` 解成 `[ChapterNoteDTO]`。
-3. 在 `decodeBoard(from:)` 里把 `Data` 解成 `StudyBoardDTO`。
-4. 在 `printSingleTaskResult()` 里按字段输出单个任务。
-5. 在 `printChapterListResult()` 里逐项输出章节列表。
-6. 在 `printBoardResult()` 里输出看板标题、负责人和任务列表。
-
-示例输出：
+### 示例输出
 
 ```text
 ======== 练习 1：单个对象 ========
@@ -811,59 +378,44 @@ starter project 当前已经提供了三段原始 JSON：
 ======== 练习 2：数组根结构 ========
 第 24 章：泛型：让同一套逻辑适配更多类型
 标签：泛型 / 复用 / 约束
-第 25 章：闭包：把函数当成值来传递
-标签：闭包 / 排序 / 回调
-第 34 章：JSON 格式与解析
-标签：JSON / Data / 解码
+...
 
 ======== 练习 3：嵌套对象与对象数组 ========
 看板标题：周末复习看板
 负责人：Alice / beginner
 - 整理 JSON 笔记 / 1 小时 / 已完成
-- 练习数组根结构解码 / 2 小时 / 未完成
-- 复习嵌套对象解析 / 1 小时 / 未完成
+...
 ```
 
-若你能成功完成这份作业，意味着你已经熟练掌握了这些知识：
+### 完成标准
 
-- 知道对象根结构该解成单个结构体。
-- 知道数组根结构该解成结构体数组。
-- 知道嵌套对象需要继续定义内部类型。
-- 能把解析结果按项展开，而不是只打印一整坨原始内容。
-
+- 能够将对象根结构解为单个结构体。
+- 能够将数组根结构解为结构体数组。
+- 能够为嵌套对象定义所需内部类型。
+- 能清晰展开解析结果，而非打印原始数据。
 
 ## 本章小结
 
-这一章中，以下这些知识点务必牢记：
+务必牢记以下知识点：
+- `JSON` 核心是 `key-value` 结构。
+- `JSON` 对象对应“字段名到字段值”，数组对应“有序值列表”。
+- `Swift` 中 `JSON` 常以 `Data` 形式存在。
+- `JSONDecoder` 配合 `Decodable` 是主流解析方案。
+- `decode` 的目标类型必须与 `JSON` 最外层结构匹配。
 
-- JSON 最核心的组织方式之一是 key-value。
-- JSON 对象常常对应“字段名到字段值”的一组关系。
-- JSON 数组常常对应“按顺序排列的一组值”。
-- JSON 进入 Swift 后，常常先以 `Data` 的形式存在。
-- `JSONSerialization` 适合帮助你先看懂最原始结构。
-- `JSONDecoder` 更适合把 JSON 直接解成 `Decodable` 类型。
-- `decode(_:from:)` 的目标类型，必须和 JSON 最外层结构对上。
+如果你能准确区分：
 
-如果你能够准确区分下面三种情况：
+- 对象根结构
+- 数组根结构
+- 嵌套结构
 
-- 最外层是对象
-- 最外层是数组
-- 某个字段的 value 里还嵌着对象或数组
+并知道它们在 Swift 中对应的类型，那么本章最重要的目标就已经达到了。
 
-并且知道它们在 Swift 里通常该被解码成什么类型，那么这一章最重要的目标就已经达到了。
+## 接下来怎么读？
 
-## 接下来怎么读
+下一步我们将会进入：**JSON 进阶：字段映射与复杂结构**。
 
-如果继续沿这条主线往下走，下一步很自然会进入：
-
-- 35. JSON 进阶：字段映射与复杂结构（待补充）
-
-因为当你已经理解：
-
-- JSON 的常见外形
-- `Data` 在解析链路里的位置
-- `JSONDecoder` 的最基础写法
-
-接下来一个很现实的问题就是：
-
-- 怎样继续处理字段名不一致、结构更深、约束更多的 JSON
+当你理解了 JSON 的外形、`Data` 的位置以及 `JSONDecoder` 的基础用法后，接下来要解决的现实问题是：
+- 怎样处理字段名不一致？
+- 怎样处理更深的嵌套结构？
+- 怎样处理更多的数据约束？

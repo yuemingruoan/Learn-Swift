@@ -26,6 +26,26 @@ jobs:
         id: pages
         uses: actions/configure-pages@v5
 
+      - name: Resolve website base
+        id: site-base
+        env:
+          WEBSITE_BASE_OVERRIDE: ${{ vars.WEBSITE_BASE }}
+          PAGES_HOST: ${{ steps.pages.outputs.host }}
+          PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: |
+          if [ -n "$WEBSITE_BASE_OVERRIDE" ]; then
+            resolved_base="$WEBSITE_BASE_OVERRIDE"
+          elif [[ -n "$PAGES_HOST" && "$PAGES_HOST" != *.github.io ]]; then
+            resolved_base="/"
+          elif [ -n "$PAGES_BASE_PATH" ]; then
+            resolved_base="${PAGES_BASE_PATH%/}/"
+          else
+            resolved_base="/"
+          fi
+
+          echo "resolved=$resolved_base" >> "$GITHUB_OUTPUT"
+          echo "Using WEBSITE_BASE=$resolved_base"
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -39,7 +59,7 @@ jobs:
 
       - name: Build website
         env:
-          WEBSITE_BASE: ${{ steps.pages.outputs.base_path && format('{0}/', steps.pages.outputs.base_path) || '/' }}
+          WEBSITE_BASE: ${{ steps.site-base.outputs.resolved }}
         working-directory: website
         run: npm run docs:build
 

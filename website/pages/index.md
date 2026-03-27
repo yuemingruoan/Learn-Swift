@@ -6,7 +6,7 @@ hero:
   text: ""
   tagline: 手把手教你精通Swift
   image:
-    src: /assets/shared/images/swift-logo.png
+    src: /images/swift-logo.png
     alt: Learn Swift
     width: 800
   actions:

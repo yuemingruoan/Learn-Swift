@@ -348,6 +348,9 @@ export default defineConfig({
   lastUpdated: true,
   outDir: "./dist",
   vite: {
+    // `srcDir` points at the repository root, so we need to pin the public
+    // asset directory back to `website/public`.
+    publicDir: path.join(websiteRoot, "public"),
     plugins: [rewriteMarkdownLinksPlugin(), syncSidebarDataPlugin()],
     resolve: {
       alias: [

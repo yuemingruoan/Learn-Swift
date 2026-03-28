@@ -4,7 +4,7 @@
 
 - **前置章节**：[14. 数组与字典](./14-arrays-and-dictionaries.md)、[23. 错误处理](./23-error-handling-clear-failure-paths.md)、[29. 并发入门](./29-concurrency-basics-async-await-and-task.md)
 - **上一章**：[33. 异步序列](./33-asyncsequence-and-asyncstream.md)
-- **下一章**：35. JSON 进阶：字段映射与复杂结构（待补充）
+- **下一章**：[35. JSON 进阶：字段映射与复杂结构](./35-json-advanced-field-mapping-and-nested-structures.md)
 - **适合人群**：已理解数组、字典、基础自定义类型和错误处理，准备上手处理常见数据格式的读者。
 
 ## 本章目标

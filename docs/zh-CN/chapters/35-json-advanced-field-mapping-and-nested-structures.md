@@ -4,8 +4,8 @@
 
 - 前置章节：[13. 结构体与最基础的自定义类型](./13-structs-and-custom-types.md)、[23. 错误处理：让失败路径更清楚](./23-error-handling-clear-failure-paths.md)、[34. JSON 格式与解析](./34-json-format-and-parsing.md)
 - 上一章：[34. JSON 格式与解析](./34-json-format-and-parsing.md)
-- 建议下一章：36. 网络请求入门：用 URLSession 获取远程 JSON（待补充）
-- 下一章：36. 网络请求入门：用 URLSession 获取远程 JSON（待补充）
+- 建议下一章：[36. Web 基础与状态管理入门：请求、响应与登录态](./36-web-basics-and-state-management.md)
+- 下一章：[36. Web 基础与状态管理入门：请求、响应与登录态](./36-web-basics-and-state-management.md)
 - 适合谁先读：已经能用 `JSONDecoder` 解简单对象，准备处理更接近真实接口数据的读者
 
 ## 本章目标

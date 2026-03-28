@@ -57,3 +57,5 @@ outline: false
 - [32. 结构化并发：async let、TaskGroup 与父子任务](/zh-CN/chapters/32-structured-concurrency)
 - [33. 异步序列：AsyncSequence 与 AsyncStream](/zh-CN/chapters/33-asyncsequence-and-asyncstream)
 - [34. JSON 格式与解析](/zh-CN/chapters/34-json-format-and-parsing)
+- [35. JSON 进阶：字段映射与复杂结构](/zh-CN/chapters/35-json-advanced-field-mapping-and-nested-structures)
+- [36. Web 基础与状态管理入门：请求、响应与登录态](/zh-CN/chapters/36-web-basics-and-state-management)

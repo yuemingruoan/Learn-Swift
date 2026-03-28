@@ -656,74 +656,51 @@ print(response.data.tasks.count)
 
 ### 任务目标
 
-1. 根据 starter 顶部给出的那一份 JSON 风格结构说明自行建模。结构说明会明确写成 `"key": 类型，是否可选，默认值` 这种形式，而不是直接给出模型类型名。
-2. 使用同一个根模型去解码多段 JSON 文本，而不是为每段数据单独建模。
-3. 处理 `task_title`、`estimated_hours`、`is_finished`、`current_step`、`resource_title`、`link_label` 这类字段名映射。
-4. 为嵌套对象和对象数组建立对应的子模型，包括 `owner`、`contact`、`progress`、`checkpoints`、`resources`。
-5. 识别并抽出可复用的共享子结构，例如同时出现在多个位置的 `link` 对象。
-6. 处理根对象和数组元素里的 Optional 与默认值，例如 `note`、`tags`、`links`、`checkpoints`、`resources`、`is_done`、`is_required`、`is_primary`。
-7. 对完整字段数据、缺失字段数据、空字符串/空数组数据分别解码并格式化输出。
+1. 根据 starter 顶部给出的结构说明，为 `StudyTaskDTO`、`BoardOwnerDTO`、`StudyBoardDTO` 和 `StudyBoardResponseDTO` 建模。
+2. 为 `StudyTaskDTO` 处理 `task_title`、`estimated_hours`、`is_finished` 这些映射字段。
+3. 为 `StudyTaskDTO` 处理 `note` 的 Optional 语义，以及 `is_finished`、`tags` 的默认值。
+4. 将完整字段任务 JSON 解码为 `StudyTaskDTO` 并格式化输出。
+5. 将缺字段任务 JSON 解码为同一个 `StudyTaskDTO`，验证默认值生效。
+6. 将包含 `message + data` 外层包装的看板 JSON 解码为响应结构并展开输出。
 
-### 建议自测输出
+### 样例输出:
 
 ```text
-======== 练习 1：共享子结构与多层嵌套 ========
+======== 练习 1：字段映射与完整字段 ========
 标题：复习闭包
 预计小时数：2
 备注：重点观察参数和返回值的关系
 完成状态：未完成
 标签：closure / review
-负责人：Alice / beginner
-负责人链接：
-- Alice 的学习主页 / https://study.example.com/alice / 主链接
-- 闭包讨论群 / https://chat.example.com/closure / 普通链接
-当前步骤：2
-检查点：
-- 阅读闭包语法 / 已完成
-  参考链接：
-  - 官方文档 / https://swift.org/documentation/ / 主链接
-- 手写排序闭包 / 未完成
-  参考链接：无
-资源：
-- 闭包语法卡片 / article / 必学
-  链接：
-  - 文档页 / https://example.com/closure-card / 主链接
-- Swift Playgrounds 练习 / exercise / 选学
-  链接：无
 
-======== 练习 2：缺失字段与默认值 ========
+======== 练习 2：可选项与默认值 ========
 标题：整理 JSON 笔记
 预计小时数：1
 备注：无
 完成状态：未完成
 标签：无标签
-负责人：Bob / beginner
-负责人链接：无
-当前步骤：1
-检查点：无
-资源：无
 
-======== 练习 3：空字符串与空数组 ========
-标题：检查空字符串和空数组
-预计小时数：1
-备注：（空字符串）
-完成状态：已完成
-标签：无标签
-负责人：Carol / intermediate
-负责人链接：无
-当前步骤：3
-检查点：无
-资源：无
+======== 练习 3：外层包装与嵌套结构 ========
+响应消息：success
+看板标题：周末复习看板
+负责人：Alice / beginner
+- 复习闭包 / 2 小时 / 未完成
+  备注：无备注
+  标签：closure / review
+- 整理 JSON 笔记 / 1 小时 / 已完成
+  备注：补充 CodingKeys 示例
+  标签：无标签
+- 练习嵌套对象解码 / 1 小时 / 未完成
+  备注：无备注
+  标签：json / nested
 ```
 
 ### 完成标准
 
 - 能为字段名不一致的情况写出正确的 `CodingKeys`
+- 能判断最外层是否需要额外的响应包装类型
 - 能为嵌套对象和对象数组建立对应模型
-- 能识别并抽出可复用的共享子结构
 - 能区分 Optional 和默认值各自更适合的场景
-- 能处理数组元素内部的默认值
-- 能区分字段缺失与字段存在但值为空这两种情况
 - 能按固定格式把解码后的结果逐项展开输出
 
 ## 本章小结

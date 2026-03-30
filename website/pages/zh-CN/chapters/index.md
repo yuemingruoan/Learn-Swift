@@ -59,3 +59,5 @@ outline: false
 - [34. JSON 格式与解析](/zh-CN/chapters/34-json-format-and-parsing)
 - [35. JSON 进阶：字段映射与复杂结构](/zh-CN/chapters/35-json-advanced-field-mapping-and-nested-structures)
 - [36. Web 基础与状态管理入门：请求、响应与登录态](/zh-CN/chapters/36-web-basics-and-state-management)
+- [37. 本地教学 API 准备：安装环境并启动服务](/zh-CN/chapters/37-local-teaching-api-setup)
+- [38. URLSession 网络请求入门：GET、POST 与 JSON 收发](/zh-CN/chapters/38-urlsession-get-and-post-json)

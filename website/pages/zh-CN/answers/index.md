@@ -51,3 +51,5 @@ outline: false
 - [32. 结构化并发：async let、TaskGroup 与父子任务 练习答案](/zh-CN/answers/32-structured-concurrency)
 - [33. 异步序列：AsyncSequence 与 AsyncStream 练习答案](/zh-CN/answers/33-asyncsequence-and-asyncstream)
 - [34. JSON 格式与解析 练习答案](/zh-CN/answers/34-json-format-and-parsing)
+- [35. JSON 进阶：字段映射与复杂结构 练习答案](/zh-CN/answers/35-json-advanced-field-mapping-and-nested-structures)
+- [38. URLSession 网络请求入门：GET、POST 与 JSON 收发 练习答案](/zh-CN/answers/38-urlsession-get-and-post-json)

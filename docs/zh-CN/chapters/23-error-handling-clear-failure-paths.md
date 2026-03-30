@@ -16,6 +16,7 @@
 - 区分 `Optional`、`Bool` 与 `throw` 的适用场景
 - 看懂 `Error`、`throws`、`throw`、`do-catch` 的基础写法
 - 使用自定义错误类型表达不同失败原因
+- 理解携带参数的错误如何声明、抛出和处理
 - 理解 `try?` 与 `try!` 的基本边界
 - 将输入校验逻辑整理为更清晰的错误处理流程
 
@@ -141,6 +142,108 @@ enum InputError: Error {
 - `Error` 用来标记“这是一个错误类型”
 - `enum` 适合枚举有限且明确的失败情况
 
+### 携带参数的错误是什么
+
+有时候，光知道“失败了”还不够，调用方还想知道：
+
+- 到底拿到了什么错误输入
+- 期望值和实际值分别是多少
+- 当前失败值具体是什么
+
+这时，错误 case 就可以顺手携带一些额外信息。
+
+最基本的声明方式如下：
+
+```swift
+enum 错误类型名: Error {
+    case 错误情况(附带值类型)
+}
+```
+
+例如：
+
+```swift
+enum InputError: Error {
+    case emptyText
+    case invalidNumber(text: String)
+    case outOfRange(min: Int, max: Int, actual: Int)
+}
+```
+
+这里的意思分别是：
+
+- `emptyText`
+  - 只是一个普通错误 case
+  - 不额外携带值
+
+- `invalidNumber(text: String)`
+  - 除了错误名字，还会把原始输入文本一起带出去
+
+- `outOfRange(min: Int, max: Int, actual: Int)`
+  - 会同时把期望范围和实际值一起带出去
+
+你可以先把它理解成：
+
+- **错误值本身不仅能表达“哪种错误”，还可以顺手带上和这次失败有关的数据**
+
+### 携带参数的错误该怎么抛出
+
+声明完之后，抛出方式也很直接：
+
+```swift
+throw 某个错误值
+```
+
+例如：
+
+```swift
+throw InputError.invalidNumber(text: text)
+```
+
+或者：
+
+```swift
+throw InputError.outOfRange(min: 0, max: 100, actual: score)
+```
+
+这里表达的意思是：
+
+- 不是只抛出一个笼统的“失败”
+- 而是把当前失败时的关键数据也一起交给外部调用方
+
+### 携带参数的错误该怎么处理
+
+调用方接住后，可以继续按错误模式匹配，并把附带值取出来：
+
+```swift
+do {
+    let score = try parseScore(text)
+    print(score)
+} catch InputError.emptyText {
+    print("请输入内容")
+} catch let InputError.invalidNumber(text) {
+    print("不是合法数字：\(text)")
+} catch let InputError.outOfRange(min, max, actual) {
+    print("数值越界：应在 \(min) 到 \(max) 之间，实际拿到 \(actual)")
+}
+```
+
+这里最值得注意的是：
+
+- `catch InputError.emptyText`
+  - 适合没有附带值的 case
+
+- `catch let InputError.invalidNumber(text)`
+  - 适合把 case 里的附带值取出来继续使用
+
+- `catch let InputError.outOfRange(min, max, actual)`
+  - 适合一次把多个附带值都取出来
+
+也就是说，携带参数的错误最实用的价值就在于：
+
+- 调用方不只知道“哪里错了”
+- 还知道“错的时候具体拿到了什么”
+
 ### 声明可能抛错的函数
 
 ```swift
@@ -176,6 +279,23 @@ if text.isEmpty {
 ```
 
 这里的 `throw` 并不是打印提示，而是将失败原因交给外部调用方。
+
+如果错误 case 带参数，`throw` 时就把这些值一起填进去：
+
+```swift
+if let score = Int(text) {
+    if score < 0 || score > 100 {
+        throw InputError.outOfRange(min: 0, max: 100, actual: score)
+    }
+} else {
+    throw InputError.invalidNumber(text: text)
+}
+```
+
+这种写法的意义在于：
+
+- 失败原因更清楚
+- 错误发生时的上下文也没有丢
 
 ### 接住错误
 
@@ -330,6 +450,33 @@ do {
 - 直接根据错误值本身进行匹配
 
 这和前面章节里讲过的 `enum` 与 `switch` 的思路是连贯的。
+
+如果错误 case 本身带了参数，`catch` 也可以顺手把这些值取出来：
+
+```swift
+do {
+    let score = try parseScore(text)
+    print(score)
+} catch let InputError.invalidNumber(text) {
+    print("输入不是合法数字：\(text)")
+} catch let InputError.outOfRange(min, max, actual) {
+    print("请输入 \(min) 到 \(max) 之间的数字，当前拿到的是 \(actual)")
+}
+```
+
+这也是为什么后面你会看到像下面这种错误建模：
+
+```swift
+case wrongFieldCount(expected: Int, actual: Int)
+```
+
+因为它比单纯写成：
+
+```swift
+case wrongFieldCount
+```
+
+更能把失败现场表达完整。
 
 如果你已经有 Java 基础，可以先用一句话建立映射：
 

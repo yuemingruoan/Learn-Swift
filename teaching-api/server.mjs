@@ -3,6 +3,17 @@ import http from "node:http";
 const port = Number(process.env.PORT ?? 3456);
 const host = process.env.HOST ?? "127.0.0.1";
 
+const demoUser = {
+  id: 1,
+  username: "swift-demo",
+  name: "Swift Learner",
+  role: "student",
+  preferredTrack: "networking"
+};
+
+const demoAccessToken = "swift-demo-token";
+const demoSessionID = "swift-demo-session";
+
 const todos = [
   {
     userId: 1,
@@ -27,30 +38,128 @@ const todos = [
     id: 4,
     title: "区分网络错误和 JSON 解码错误",
     completed: false
+  },
+  {
+    userId: 2,
+    id: 5,
+    title: "把鉴权放进请求构造阶段",
+    completed: true
+  }
+];
+
+const learningResources = [
+  {
+    id: 101,
+    title: "Endpoint 建模实战",
+    category: "networking",
+    level: "beginner",
+    durationMinutes: 18,
+    publishedAt: "2026-03-01",
+    downloadSlug: "endpoint-modeling-checklist"
+  },
+  {
+    id: 102,
+    title: "Authorization Header 清单",
+    category: "networking",
+    level: "beginner",
+    durationMinutes: 12,
+    publishedAt: "2026-03-05",
+    downloadSlug: "authorization-header-checklist"
+  },
+  {
+    id: 103,
+    title: "分页响应与 DTO 设计",
+    category: "networking",
+    level: "intermediate",
+    durationMinutes: 24,
+    publishedAt: "2026-03-08",
+    downloadSlug: "pagination-dto-notes"
+  },
+  {
+    id: 104,
+    title: "Codable 缓存边界",
+    category: "persistence",
+    level: "intermediate",
+    durationMinutes: 20,
+    publishedAt: "2026-03-11",
+    downloadSlug: "codable-cache-boundaries"
+  },
+  {
+    id: 105,
+    title: "SwiftData 最小 CRUD",
+    category: "persistence",
+    level: "intermediate",
+    durationMinutes: 22,
+    publishedAt: "2026-03-14",
+    downloadSlug: "swiftdata-crud-cheatsheet"
+  },
+  {
+    id: 106,
+    title: "协议抽象与依赖注入",
+    category: "architecture",
+    level: "advanced",
+    durationMinutes: 28,
+    publishedAt: "2026-03-16",
+    downloadSlug: "dependency-injection-workbook"
+  },
+  {
+    id: 107,
+    title: "下载接口与文件落盘",
+    category: "networking",
+    level: "intermediate",
+    durationMinutes: 16,
+    publishedAt: "2026-03-20",
+    downloadSlug: "download-to-disk-guide"
+  },
+  {
+    id: 108,
+    title: "查询参数的职责边界",
+    category: "networking",
+    level: "beginner",
+    durationMinutes: 14,
+    publishedAt: "2026-03-24",
+    downloadSlug: "query-items-reference"
   }
 ];
 
 let nextStudyRecordID = 101;
 const studyRecords = [];
 
-function sendJSON(response, statusCode, payload) {
-  response.writeHead(statusCode, {
+function buildCommonHeaders(extraHeaders = {}) {
+  return {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, Cookie",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Content-Type": "application/json; charset=utf-8"
-  });
+    ...extraHeaders
+  };
+}
+
+function sendJSON(response, statusCode, payload, extraHeaders = {}) {
+  response.writeHead(statusCode, buildCommonHeaders({
+    "Content-Type": "application/json; charset=utf-8",
+    ...extraHeaders
+  }));
   response.end(JSON.stringify(payload, null, 2));
 }
 
+function sendText(response, statusCode, text, contentType = "text/plain; charset=utf-8", extraHeaders = {}) {
+  response.writeHead(statusCode, buildCommonHeaders({
+    "Content-Type": contentType,
+    ...extraHeaders
+  }));
+  response.end(text);
+}
+
+function sendRaw(response, statusCode, body, contentType, extraHeaders = {}) {
+  response.writeHead(statusCode, buildCommonHeaders({
+    "Content-Type": contentType,
+    ...extraHeaders
+  }));
+  response.end(body);
+}
+
 function sendHTML(response, statusCode, html) {
-  response.writeHead(statusCode, {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Content-Type": "text/html; charset=utf-8"
-  });
-  response.end(html);
+  sendText(response, statusCode, html, "text/html; charset=utf-8");
 }
 
 function makeHealthPayload() {
@@ -165,7 +274,7 @@ function makeHealthPage() {
   <main class="card">
     <p class="eyebrow">Learn Swift</p>
     <h1>本地教学 API 已成功启动</h1>
-    <p>这说明你的本地服务已经可用，可以继续学习后续网络请求章节。后续章节需要的具体接口，会在用到时再逐步说明。</p>
+    <p>这说明你的本地服务已经可用，可以继续学习后续网络请求章节。39～41 章 demo 需要的鉴权、分页、下载接口也已经包含在当前服务里。</p>
     <div class="status">
       <span class="dot"></span>
       服务状态正常
@@ -195,6 +304,260 @@ function readRequestBody(request) {
   });
 }
 
+async function readJSONBody(request) {
+  const rawBody = await readRequestBody(request);
+  return rawBody.length === 0 ? {} : JSON.parse(rawBody);
+}
+
+function sleep(ms) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function findTodoByID(id) {
+  return todos.find(todo => todo.id === id) ?? null;
+}
+
+function filterTodos(searchParams) {
+  let result = [...todos];
+  const keyword = searchParams.get("q");
+  const completedText = searchParams.get("completed");
+  const limitText = searchParams.get("limit");
+
+  if (keyword) {
+    const loweredKeyword = keyword.toLowerCase();
+    result = result.filter(todo => todo.title.toLowerCase().includes(loweredKeyword));
+  }
+
+  if (completedText != null) {
+    if (completedText !== "true" && completedText !== "false") {
+      return {
+        error: {
+          statusCode: 400,
+          payload: {
+            error: "invalid_completed",
+            message: "查询参数 completed 只能是 true 或 false。"
+          }
+        }
+      };
+    }
+
+    result = result.filter(todo => String(todo.completed) === completedText);
+  }
+
+  if (limitText != null) {
+    const limit = Number(limitText);
+    if (Number.isNaN(limit) || limit <= 0) {
+      return {
+        error: {
+          statusCode: 400,
+          payload: {
+            error: "invalid_limit",
+            message: "查询参数 limit 必须是大于 0 的数字。"
+          }
+        }
+      };
+    }
+
+    result = result.slice(0, limit);
+  }
+
+  return { value: result };
+}
+
+function getBearerToken(request) {
+  const authorization = request.headers.authorization ?? "";
+
+  if (!authorization.startsWith("Bearer ")) {
+    return null;
+  }
+
+  return authorization.slice("Bearer ".length);
+}
+
+function hasDemoSessionCookie(request) {
+  const cookieHeader = request.headers.cookie ?? "";
+  return cookieHeader
+    .split(";")
+    .map(part => part.trim())
+    .some(part => part === `session_id=${demoSessionID}`);
+}
+
+function requireBearerAuth(request, response) {
+  const token = getBearerToken(request);
+
+  if (token !== demoAccessToken) {
+    sendJSON(response, 401, {
+      error: "unauthorized",
+      message: "当前接口需要有效的 Bearer Token。"
+    });
+    return false;
+  }
+
+  return true;
+}
+
+function requireSessionAuth(request, response) {
+  if (!hasDemoSessionCookie(request)) {
+    sendJSON(response, 401, {
+      error: "unauthorized",
+      message: "当前接口需要有效的 session cookie。"
+    });
+    return false;
+  }
+
+  return true;
+}
+
+function validateJSONContentType(request, response, routeDescription) {
+  const contentType = request.headers["content-type"] ?? "";
+
+  if (!contentType.includes("application/json")) {
+    sendJSON(response, 415, {
+      error: "unsupported_media_type",
+      message: `${routeDescription} 只接受 application/json。`
+    });
+    return false;
+  }
+
+  return true;
+}
+
+function compareValues(left, right, order) {
+  if (left < right) {
+    return order === "desc" ? 1 : -1;
+  }
+
+  if (left > right) {
+    return order === "desc" ? -1 : 1;
+  }
+
+  return 0;
+}
+
+function listLearningResources(searchParams) {
+  const page = Number(searchParams.get("page") ?? "1");
+  const limit = Number(searchParams.get("limit") ?? "3");
+  const keyword = searchParams.get("q");
+  const category = searchParams.get("category");
+  const sort = searchParams.get("sort") ?? "publishedAt";
+  const order = searchParams.get("order") ?? "desc";
+
+  if (!Number.isInteger(page) || page <= 0) {
+    return {
+      error: {
+        statusCode: 400,
+        payload: {
+          error: "invalid_page",
+          message: "查询参数 page 必须是大于 0 的整数。"
+        }
+      }
+    };
+  }
+
+  if (!Number.isInteger(limit) || limit <= 0 || limit > 20) {
+    return {
+      error: {
+        statusCode: 400,
+        payload: {
+          error: "invalid_limit",
+          message: "查询参数 limit 必须是 1 到 20 之间的整数。"
+        }
+      }
+    };
+  }
+
+  const allowedCategories = new Set(["networking", "persistence", "architecture"]);
+  if (category && !allowedCategories.has(category)) {
+    return {
+      error: {
+        statusCode: 400,
+        payload: {
+          error: "invalid_category",
+          message: "查询参数 category 必须是 networking、persistence、architecture 之一。"
+        }
+      }
+    };
+  }
+
+  const allowedSortFields = new Set(["publishedAt", "durationMinutes", "title"]);
+  if (!allowedSortFields.has(sort)) {
+    return {
+      error: {
+        statusCode: 400,
+        payload: {
+          error: "invalid_sort",
+          message: "查询参数 sort 必须是 publishedAt、durationMinutes、title 之一。"
+        }
+      }
+    };
+  }
+
+  if (order !== "asc" && order !== "desc") {
+    return {
+      error: {
+        statusCode: 400,
+        payload: {
+          error: "invalid_order",
+          message: "查询参数 order 必须是 asc 或 desc。"
+        }
+      }
+    };
+  }
+
+  let items = [...learningResources];
+
+  if (keyword) {
+    const loweredKeyword = keyword.toLowerCase();
+    items = items.filter(resource => resource.title.toLowerCase().includes(loweredKeyword));
+  }
+
+  if (category) {
+    items = items.filter(resource => resource.category === category);
+  }
+
+  items.sort((left, right) => {
+    if (sort === "durationMinutes") {
+      return compareValues(left.durationMinutes, right.durationMinutes, order);
+    }
+
+    if (sort === "title") {
+      return compareValues(left.title, right.title, order);
+    }
+
+    return compareValues(left.publishedAt, right.publishedAt, order);
+  });
+
+  const total = items.length;
+  const start = (page - 1) * limit;
+  const pagedItems = items.slice(start, start + limit);
+
+  return {
+    value: {
+      items: pagedItems,
+      page,
+      limit,
+      total,
+      hasMore: start + limit < total
+    }
+  };
+}
+
+function makeDownloadBody(resource) {
+  return [
+    `# ${resource.title}`,
+    "",
+    `category: ${resource.category}`,
+    `level: ${resource.level}`,
+    `durationMinutes: ${resource.durationMinutes}`,
+    `publishedAt: ${resource.publishedAt}`,
+    "",
+    "这是一份用于 41 章下载演示的纯文本资料。",
+    "你可以观察 Content-Type、Content-Disposition，以及临时文件 URL 的处理方式。"
+  ].join("\n");
+}
+
 const server = http.createServer(async (request, response) => {
   if (!request.url || !request.method) {
     sendJSON(response, 400, {
@@ -205,11 +568,7 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (request.method === "OPTIONS") {
-    response.writeHead(204, {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
-    });
+    response.writeHead(204, buildCommonHeaders());
     response.end();
     return;
   }
@@ -226,42 +585,41 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
-  if (request.method === "GET" && url.pathname === "/todos/1") {
-    sendJSON(response, 200, todos[0]);
+  if (request.method === "GET" && url.pathname === "/todos") {
+    const result = filterTodos(url.searchParams);
+
+    if (result.error) {
+      sendJSON(response, result.error.statusCode, result.error.payload);
+      return;
+    }
+
+    sendJSON(response, 200, result.value);
     return;
   }
 
-  if (request.method === "GET" && url.pathname === "/todos") {
-    const limitText = url.searchParams.get("limit");
-    const limit = limitText == null ? todos.length : Number(limitText);
+  if (request.method === "GET" && /^\/todos\/\d+$/.test(url.pathname)) {
+    const id = Number(url.pathname.split("/")[2]);
+    const todo = findTodoByID(id);
 
-    if (Number.isNaN(limit) || limit <= 0) {
-      sendJSON(response, 400, {
-        error: "invalid_limit",
-        message: "查询参数 limit 必须是大于 0 的数字。"
+    if (!todo) {
+      sendJSON(response, 404, {
+        error: "todo_not_found",
+        message: `找不到 id = ${id} 的任务。`
       });
       return;
     }
 
-    sendJSON(response, 200, todos.slice(0, limit));
+    sendJSON(response, 200, todo);
     return;
   }
 
   if (request.method === "POST" && url.pathname === "/study-records") {
-    const contentType = request.headers["content-type"] ?? "";
-
-    if (!contentType.includes("application/json")) {
-      sendJSON(response, 415, {
-        error: "unsupported_media_type",
-        message: "POST /study-records 只接受 application/json。"
-      });
+    if (!validateJSONContentType(request, response, "POST /study-records")) {
       return;
     }
 
     try {
-      const rawBody = await readRequestBody(request);
-      const payload = JSON.parse(rawBody);
-
+      const payload = await readJSONBody(request);
       const { chapter, title, durationMinutes } = payload;
 
       if (
@@ -295,6 +653,191 @@ const server = http.createServer(async (request, response) => {
       });
       return;
     }
+  }
+
+  if (request.method === "GET" && url.pathname === "/diagnostics/server-error") {
+    sendJSON(response, 500, {
+      error: "server_error",
+      message: "这是用于第 39 章错误建模演示的 500 响应。"
+    });
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/diagnostics/bad-todo-json") {
+    sendRaw(
+      response,
+      200,
+      JSON.stringify({
+        id: "oops",
+        title: 123,
+        completed: "maybe"
+      }, null, 2),
+      "application/json; charset=utf-8"
+    );
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/auth/token-login") {
+    if (!validateJSONContentType(request, response, "POST /auth/token-login")) {
+      return;
+    }
+
+    try {
+      const payload = await readJSONBody(request);
+      const { username, password } = payload;
+
+      if (username !== "swift-demo" || password !== "123456") {
+        sendJSON(response, 401, {
+          error: "invalid_credentials",
+          message: "用户名或密码错误。"
+        });
+        return;
+      }
+
+      sendJSON(response, 200, {
+        accessToken: demoAccessToken,
+        tokenType: "Bearer",
+        expiresIn: 3600,
+        user: demoUser
+      });
+      return;
+    } catch {
+      sendJSON(response, 400, {
+        error: "invalid_json",
+        message: "请求体不是合法 JSON。"
+      });
+      return;
+    }
+  }
+
+  if (request.method === "GET" && url.pathname === "/auth/token-me") {
+    if (!requireBearerAuth(request, response)) {
+      return;
+    }
+
+    sendJSON(response, 200, demoUser);
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/auth/admin-report") {
+    if (!requireBearerAuth(request, response)) {
+      return;
+    }
+
+    sendJSON(response, 403, {
+      error: "forbidden",
+      message: "你已经登录，但当前角色没有访问管理报表的权限。"
+    });
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/auth/session-login") {
+    if (!validateJSONContentType(request, response, "POST /auth/session-login")) {
+      return;
+    }
+
+    try {
+      const payload = await readJSONBody(request);
+      const { username, password } = payload;
+
+      if (username !== "swift-demo" || password !== "123456") {
+        sendJSON(response, 401, {
+          error: "invalid_credentials",
+          message: "用户名或密码错误。"
+        });
+        return;
+      }
+
+      sendJSON(response, 200, {
+        message: "session_created",
+        user: demoUser
+      }, {
+        "Set-Cookie": `session_id=${demoSessionID}; Path=/; HttpOnly`
+      });
+      return;
+    } catch {
+      sendJSON(response, 400, {
+        error: "invalid_json",
+        message: "请求体不是合法 JSON。"
+      });
+      return;
+    }
+  }
+
+  if (request.method === "GET" && url.pathname === "/auth/session-me") {
+    if (!requireSessionAuth(request, response)) {
+      return;
+    }
+
+    sendJSON(response, 200, demoUser);
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/learning-resources") {
+    if (!requireBearerAuth(request, response)) {
+      return;
+    }
+
+    const result = listLearningResources(url.searchParams);
+
+    if (result.error) {
+      sendJSON(response, result.error.statusCode, result.error.payload);
+      return;
+    }
+
+    sendJSON(response, 200, result.value);
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/slow-summary") {
+    if (!requireBearerAuth(request, response)) {
+      return;
+    }
+
+    const delayMs = Number(url.searchParams.get("delayMs") ?? "1800");
+    if (!Number.isInteger(delayMs) || delayMs < 0 || delayMs > 5000) {
+      sendJSON(response, 400, {
+        error: "invalid_delay",
+        message: "查询参数 delayMs 必须是 0 到 5000 之间的整数。"
+      });
+      return;
+    }
+
+    await sleep(delayMs);
+    sendJSON(response, 200, {
+      title: "慢接口汇总",
+      delayMs,
+      note: "这个接口故意延迟响应，用来演示 timeout 归类。"
+    });
+    return;
+  }
+
+  if (request.method === "GET" && /^\/downloads\/[\w-]+$/.test(url.pathname)) {
+    if (!requireBearerAuth(request, response)) {
+      return;
+    }
+
+    const slug = url.pathname.split("/")[2];
+    const resource = learningResources.find(item => item.downloadSlug === slug) ?? null;
+
+    if (!resource) {
+      sendJSON(response, 404, {
+        error: "download_not_found",
+        message: `找不到 slug = ${slug} 的下载资源。`
+      });
+      return;
+    }
+
+    sendText(
+      response,
+      200,
+      makeDownloadBody(resource),
+      "text/plain; charset=utf-8",
+      {
+        "Content-Disposition": `attachment; filename="${slug}.txt"`
+      }
+    );
+    return;
   }
 
   sendJSON(response, 404, {

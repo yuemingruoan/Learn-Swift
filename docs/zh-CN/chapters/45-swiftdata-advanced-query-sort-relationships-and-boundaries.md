@@ -68,6 +68,15 @@
 - 按什么顺序返回
 - 删除列表时，待办应该跟着删还是回到未归类
 
+本章继续沿用第 44 章的纯 SwiftData 起手方式：
+
+```swift
+let container = try ModelContainer(for: TodoList.self, TodoItem.self)
+let context = ModelContext(container)
+```
+
+后面的筛选、排序、关系和删除规则，都在这个 `ModelContext` 之上展开。
+
 ## 先立一条总则：持久化层只做它听得懂的事
 
 SwiftData 很适合处理结构化条件和稳定排序，但它不是 Swift 运行时，也不是你的全部业务逻辑。
@@ -506,7 +515,7 @@ SwiftData 很适合处理下面这类本地数据问题：
 
 为了让主题保持集中，本章明确不做这些事：
 
-- 不讲 SwiftUI 的 `@Query` 绑定
+- 不讲界面层集成方式，例如查询绑定、容器注入或界面联动
 - 不讲迁移、CloudKit、同步冲突
 - 不讲大数据量性能优化和索引策略
 - 不讲多上下文高级并发组织

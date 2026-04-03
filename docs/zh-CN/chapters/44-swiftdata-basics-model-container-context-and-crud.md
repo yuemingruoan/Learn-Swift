@@ -57,6 +57,26 @@ SwiftData 就是在这一步开始变得合适。
 - 最小闭环是怎么跑通的
 - 出问题时你该先怀疑哪一层
 
+本章正文统一采用这种纯 SwiftData 的起手方式：
+
+```swift
+let container = try ModelContainer(for: TodoItem.self)
+let context = ModelContext(container)
+
+let item = TodoItem(title: "在本地新增一条待办")
+context.insert(item)
+try context.save()
+```
+
+也就是说，本章重点是：
+
+- `@Model`
+- `ModelContainer`
+- `ModelContext`
+- `insert / fetch / delete / save`
+
+而不是任何界面层注入或绑定写法。
+
 ## 统一场景：待办项已经变成“用户本地维护的数据”
 
 这章开始，待办项不再是远程结果快照，而是用户本地维护的数据本体。
@@ -117,30 +137,6 @@ final class TodoItem {
     }
 }
 
-enum TodoStoreBootstrap {
-    static func storeURL() throws -> URL {
-        let fm = FileManager.default
-        let caches = try fm.url(
-            for: .cachesDirectory,
-            in: .userDomainMask,
-            appropriateFor: nil,
-            create: true
-        )
-
-        let folder = caches
-            .appendingPathComponent("learn-swift", isDirectory: true)
-            .appendingPathComponent("44-swiftdata-basics", isDirectory: true)
-
-        try fm.createDirectory(at: folder, withIntermediateDirectories: true)
-        return folder.appendingPathComponent("todos.store")
-    }
-
-    static func makeContainer(at storeURL: URL) throws -> ModelContainer {
-        let configuration = ModelConfiguration(url: storeURL)
-        return try ModelContainer(for: TodoItem.self, configurations: configuration)
-    }
-}
-
 struct TodoStore {
     let context: ModelContext
 
@@ -169,8 +165,7 @@ struct TodoStore {
     }
 }
 
-let storeURL = try TodoStoreBootstrap.storeURL()
-let container = try TodoStoreBootstrap.makeContainer(at: storeURL)
+let container = try ModelContainer(for: TodoItem.self)
 let context = ModelContext(container)
 let store = TodoStore(context: context)
 
@@ -181,7 +176,7 @@ var items = try store.fetchAll()
 try store.toggle(items[0])
 try store.delete(items[1])
 
-let containerAfterRestart = try TodoStoreBootstrap.makeContainer(at: storeURL)
+let containerAfterRestart = try ModelContainer(for: TodoItem.self)
 let contextAfterRestart = ModelContext(containerAfterRestart)
 let storeAfterRestart = TodoStore(context: contextAfterRestart)
 let persistedItems = try storeAfterRestart.fetchAll()
@@ -191,7 +186,7 @@ print(persistedItems.count)
 显然你不需要把这段代码逐行背下来，你只需要理解其中的几个重点即可：
 
 - 用 `@Model` 定义哪些对象值得长期保存
-- 用 `ModelContainer` 打开或创建底层 store
+- 用 `ModelContainer` 创建本地持久化容器
 - 用 `ModelContext` 承接当前这次读写
 - 用一个很薄的 `TodoStore` 把 CRUD 收口
 
@@ -791,7 +786,7 @@ func delete(_ item: TodoItem) throws {
 
 为了让入门阶段保持清楚，本章明确不做这些事：
 
-- 不讲 SwiftUI 绑定和界面刷新
+- 不讲界面层集成方式，例如容器注入、查询绑定和界面刷新联动
 - 不讲关系建模与删除规则
 - 不讲复杂筛选和排序
 - 不讲迁移、同步、性能优化、多上下文协同

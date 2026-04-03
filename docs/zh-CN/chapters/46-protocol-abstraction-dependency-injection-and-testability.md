@@ -84,6 +84,19 @@ final class ArticleService {
 }
 ```
 
+这里故意把依赖写死，是为了暴露耦合问题，不是为了再教一遍 Foundation API。文中的这些系统接口如果你想回看基础说明，可以直接回前面章节：
+
+- `URLSession.shared.data(from:)`
+  - 见第 `39` 章网络层主线
+- `JSONDecoder().decode`
+  - 见第 `39` 章和第 `43` 章
+- `FileManager.default.temporaryDirectory`
+  - 见第 `42` 章
+- `.appendingPathComponent(...)`
+  - 见第 `42` 章
+- `JSONEncoder().encode`
+  - 见第 `43` 章
+
 这段代码的问题不是“写法不 Swift”，而是**耦合方式会让你很难做以下事情**：
 
 - 想测试“当网络失败时是否回退到缓存”：你得真的断网或者构造复杂的网络失败；并且测试要读写真实文件。

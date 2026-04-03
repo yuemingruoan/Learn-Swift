@@ -93,6 +93,27 @@ guard let url = components.url else {
 }
 ```
 
+`URLQueryItem(name:value:)`
+
+- 参数：
+  - `name`：查询项名称，例如 `"page"`、`"q"`
+  - `value`：查询项值，例如 `"1"`、`"swift"`
+- 返回值：
+  - `URLQueryItem`
+- 作用：
+  - 把单个 query 条件安全地表达出来，交给 `URLComponents` 统一编码
+
+`URLComponents`
+
+- 它解决的问题：避免手工拼 `?q=swift&page=1` 这种容易出错的字符串。
+- 本章常用成员：`queryItems`、`url`
+- 当前代码里怎么理解：先把 query 结构化写出来，再生成最终 URL。
+
+对应文档：
+
+- [`URLComponents`（Apple Developer）](https://developer.apple.com/documentation/foundation/urlcomponents)
+- [`URLQueryItem`（Apple Developer）](https://developer.apple.com/documentation/foundation/urlqueryitem)
+
 这里你已经能看到第一个“请求描述差异”：
 
 - 最小 GET 只需要一个 `URL`
@@ -254,6 +275,19 @@ HTTP 状态码来自服务器响应报文（例如 `HTTP/1.1 200 OK`）。如果
 - 搜索、列表、普通 JSON API：更短的 request timeout
 - 下载、弱网容忍任务：更长的 resource timeout，或采用更合适的下载方案
 
+这两个成员可以先这样理解：
+
+- `timeoutIntervalForRequest`
+  - 作用：控制单次请求等待响应或数据时的超时策略
+- `timeoutIntervalForResource`
+  - 作用：控制整个资源加载过程允许持续多久
+
+对应文档：
+
+- [`URLSessionConfiguration`（Apple Developer）](https://developer.apple.com/documentation/foundation/urlsessionconfiguration)
+- [`timeoutIntervalForRequest`（Apple Developer）](https://developer.apple.com/documentation/foundation/urlsessionconfiguration/timeoutintervalforrequest)
+- [`timeoutIntervalForResource`（Apple Developer）](https://developer.apple.com/documentation/foundation/urlsessionconfiguration/timeoutintervalforresource)
+
 #### 3.3 在请求描述里表达超时
 
 超时既可以通过 session 配置统一设置，也可以按请求设置。按请求设置时，常见做法是用 `URLRequest.timeoutInterval`：
@@ -263,6 +297,19 @@ var request = URLRequest(url: url)
 request.httpMethod = "GET"
 request.timeoutInterval = 10 // 秒
 ```
+
+`timeoutInterval`
+
+- 参数：
+  - 这里不是函数参数，而是 `URLRequest` 的可写属性，值通常是秒数
+- 返回值：
+  - `TimeInterval`
+- 作用：
+  - 给单个请求设置专属超时时间，而不是只依赖 session 级默认配置
+
+对应文档：
+
+- [`timeoutInterval`（Apple Developer）](https://developer.apple.com/documentation/foundation/urlrequest/timeoutinterval)
 
 这又回到了“请求描述差异”：
 
@@ -346,6 +393,37 @@ let contentType = http.value(forHTTPHeaderField: "Content-Type")
 print("Downloaded to temp file:", tempFileURL)
 print("Content-Type:", contentType ?? "<none>")
 ```
+
+`download(for:delegate:)`
+
+- 参数：
+  - 一个 `URLRequest`
+  - 一个可选 delegate（本章示例里省略细节）
+- 返回值：
+  - 临时文件 `URL` 和响应对象
+- 作用：
+  - 走下载路径，把响应内容先放到系统临时文件，而不是一次性全部进内存
+
+`value(forHTTPHeaderField:)`
+
+- 参数：
+  - Header 字段名，例如 `"Content-Type"`
+- 返回值：
+  - 可选字符串
+- 作用：
+  - 从响应头里读取某个字段的值，常用于识别媒体类型、建议文件名等信息
+
+`URLError`
+
+- 它解决的问题：把超时、断网、DNS 失败等传输层错误明确表达出来。
+- 本章常见关注点：`.timedOut`
+- 当前代码里怎么理解：这类错误发生时，往往连 `HTTPURLResponse.statusCode` 都拿不到。
+
+对应文档：
+
+- [`download(for:delegate:)`（Apple Developer）](https://developer.apple.com/documentation/foundation/urlsession/download%28for%3Adelegate%3A%29)
+- [`HTTPURLResponse.value(forHTTPHeaderField:)`（Apple Developer）](https://developer.apple.com/documentation/foundation/httpurlresponse/value%28forhttpheaderfield%3A%29?language=objc)
+- [`URLError`（Apple Developer）](https://developer.apple.com/documentation/foundation/urlerror)
 
 #### 5.3 接回网络层：让 Endpoint 能表达“我想要下载”
 

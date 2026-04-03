@@ -151,6 +151,19 @@ final class TodoItem {
 - `@Relationship(deleteRule: .nullify, inverse: \TodoItem.list)` 表示 `TodoList.items` 和 `TodoItem.list` 是一对多关系
 - `.nullify` 表示删除列表时，不删除待办，只把它们变成未归类
 
+`@Relationship`
+
+- 它解决的问题：把两个模型之间的关联关系和删除影响写清楚。
+- 本章常用成员：`deleteRule`、`inverse`
+- 当前代码里怎么理解：它让 `TodoList.items` 和 `TodoItem.list` 真正形成一对多关系，而不是互相独立的普通属性。
+
+对应文档：
+
+- [`Predicate` / `#Predicate`（Apple Developer）](https://developer.apple.com/documentation/foundation/predicate)
+- [`FetchDescriptor`（Apple Developer）](https://developer.apple.com/documentation/swiftdata/fetchdescriptor)
+- [`SortDescriptor`（Apple Developer）](https://developer.apple.com/documentation/foundation/sortdescriptor)
+- [`Defining data relationships with enumerations and model classes`（Apple Developer）](https://developer.apple.com/documentation/swiftdata/defining-data-relationships-with-enumerations-and-model-classes)
+
 为了让正文不依赖 demo，这里先把后面会用到的最小存储入口放出来：
 
 ```swift
@@ -222,6 +235,34 @@ func fetchUndoneTodos(in listName: String) throws -> [TodoItem] {
     return try context.fetch(descriptor)
 }
 ```
+
+这里几个类型的分工可以直接压成三句话：
+
+- `#Predicate`
+  - 作用：表达“读哪些数据”
+- `FetchDescriptor`
+  - 作用：把筛选和排序打包成一份查询描述
+- `SortDescriptor`
+  - 作用：表达“按什么顺序返回”
+
+`#Predicate { ... }`
+
+- 参数：
+  - 闭包里的条件表达式
+- 返回值：
+  - 一个可被持久化层理解的谓词对象
+- 作用：
+  - 把“只读未完成且属于指定列表的待办”写成结构化条件
+
+`FetchDescriptor(...)`
+
+- 参数：
+  - 可选 `predicate`
+  - 可选 `sortBy`
+- 返回值：
+  - `FetchDescriptor`
+- 作用：
+  - 把条件和排序规则一起交给 `ModelContext.fetch(_:)`
 
 这段代码最值得看的，是职责怎么分开：
 
@@ -375,6 +416,15 @@ func fetchInboxTodos() throws -> [TodoItem] {
 
 - 不要把删除语义交给模糊的默认直觉
 - 先明确业务，再写关系规则
+
+放回当前代码里，`deleteRule` 至少要能读懂这三类行为：
+
+- `cascade`
+  - 作用：删父就删子
+- `nullify`
+  - 作用：删父但把子对象关系置空
+- `deny`
+  - 作用：还有子对象时不允许删除父对象
 
 ## 4. 把查询、排序、关系串起来：一个真实读取需求长什么样
 

@@ -163,6 +163,23 @@ struct Endpoint {
 }
 ```
 
+可以先这样理解它们：
+
+- `URLQueryItem`
+  - 它解决的问题：把单个查询参数写成一个明确类型，而不是手工拼接 `"?page=1"` 这种字符串。
+  - 本章常用成员：`name`、`value`
+  - 当前代码里怎么理解：`Endpoint.queryItems` 就是“这个接口要附带哪些 query 条件”。
+
+- `Data`
+  - 它解决的问题：承接请求体或响应体的原始字节。
+  - 本章常用操作：放进 `body`、从 `URLSession` 收到响应体、交给 `JSONDecoder` 解码。
+  - 当前代码里怎么理解：`body` 不关心它是不是 JSON 文本，它只是一段待发送字节。
+
+对应文档：
+
+- [`URLQueryItem`（Apple Developer）](https://developer.apple.com/documentation/foundation/urlqueryitem)
+- [`Data`（Apple Developer）](https://developer.apple.com/documentation/foundation/data)
+
 为了让它更像“接口目录”，我们通常会用工厂方法（或静态属性）来创建具体接口：
 
 ```swift
@@ -248,6 +265,43 @@ extension Endpoint {
     }
 }
 ```
+
+`makeRequest(baseURL:)`
+
+- 参数：
+  - `baseURL`：当前环境下的服务根地址，例如 `http://127.0.0.1:3456`
+- 返回值：
+  - `URLRequest`：系统真正可发送的请求对象
+- 作用：
+  - 把 `Endpoint` 里的路径、方法、query、header、body 组装成一个完整请求
+
+`URLComponents`
+
+- 它解决的问题：安全构造 URL，而不是自己拼接字符串。
+- 本章常用成员：`path`、`queryItems`、`url`
+- 当前代码里怎么理解：它是 `Endpoint` 和最终 `URL` 之间的中间组装器。
+
+`URLRequest`
+
+- 它解决的问题：把“请求长什么样”落成系统能发送的对象。
+- 本章常用成员：`init(url:)`、`httpMethod`、`httpBody`、`setValue(_:forHTTPHeaderField:)`
+- 当前代码里怎么理解：这就是后面 `URLSession` 真正接收的输入。
+
+`JSONEncoder.encode(_:)`
+
+- 参数：
+  - 一个遵守 `Encodable` 的值
+- 返回值：
+  - 编码后的 `Data`
+- 作用：
+  - 把 Swift 值转成可放进 `httpBody` 的 JSON 字节
+
+对应文档：
+
+- [`URLRequest`（Apple Developer）](https://developer.apple.com/documentation/foundation/urlrequest)
+- [`URLComponents`（Apple Developer）](https://developer.apple.com/documentation/foundation/urlcomponents)
+- [`URLQueryItem`（Apple Developer）](https://developer.apple.com/documentation/foundation/urlqueryitem)
+- [`JSONEncoder`（Apple Developer）](https://developer.apple.com/documentation/foundation/jsonencoder)
 
 这里有两个边界要守住：
 
@@ -374,6 +428,39 @@ struct NetworkClient {
     }
 }
 ```
+
+`session.data(for:)`
+
+- 参数：
+  - 一个 `URLRequest`
+- 返回值：
+  - `(Data, URLResponse)` 元组
+- 作用：
+  - 真正把请求发出去，并带回原始响应体和响应对象
+
+`HTTPURLResponse`
+
+- 它解决的问题：把 HTTP 响应从更宽泛的 `URLResponse` 里明确区分出来。
+- 本章常用成员：`statusCode`
+- 当前代码里怎么理解：只有转成 `HTTPURLResponse` 后，才有资格谈“是不是 2xx”。
+
+`JSONDecoder.decode(_:from:)`
+
+- 参数：
+  - 目标类型，例如 `TodoDTO.self`
+  - 原始 `Data`
+- 返回值：
+  - 解码后的 Swift 值
+- 作用：
+  - 把响应 JSON 转成调用方真正想要的 DTO
+
+对应文档：
+
+- [`URLSession`（Apple Developer）](https://developer.apple.com/documentation/foundation/urlsession)
+- [`HTTPURLResponse`（Apple Developer）](https://developer.apple.com/documentation/foundation/httpurlresponse)
+- [`JSONDecoder`（Apple Developer）](https://developer.apple.com/documentation/foundation/jsondecoder)
+
+这也是为什么后面第 40 章讲 Header、第 41 章讲 query / timeout / download 时，都会继续站在 `Endpoint -> URLRequest -> URLSession -> JSONDecoder` 这条链路上扩展，而不是重起一套结构。
 
 这段代码做了一件非常重要的事情：它把“每个接口都必须一致执行的规则”集中到了一个地方：
 

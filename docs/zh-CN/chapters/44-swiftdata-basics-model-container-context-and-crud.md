@@ -252,11 +252,6 @@ final class TodoItem {
 - 知道底层数据存放在哪里
 - 为后续的 `ModelContext` 提供依附基础
 
-对应官方文档：
-
-- [`ModelContainer`（Apple Developer）](https://developer.apple.com/documentation/swiftdata/modelcontainer)
-- [`ModelConfiguration`（Apple Developer）](https://developer.apple.com/documentation/swiftdata/modelconfiguration)
-
 最小代码可以先写成这样：
 
 ```swift
@@ -284,6 +279,24 @@ enum TodoStoreBootstrap {
     }
 }
 ```
+
+这里的 `storeURL()` 会继续用到第 `42` 章已经讲过的文件系统 API：
+
+- `FileManager.url(for:in:appropriateFor:create:)`
+- `appendingPathComponent(_:isDirectory:)`
+- `createDirectory(at:withIntermediateDirectories:attributes:)`
+
+所以这一段的重点不是重新认识这些 API，而是理解：
+
+- 为什么 SwiftData 的 store 也需要先决定一个稳定文件位置
+- 为什么在真正创建 `ModelContainer` 前，要先把父目录准备好
+
+对应官方文档：
+
+- [`ModelContainer`（Apple Developer）](https://developer.apple.com/documentation/swiftdata/modelcontainer)
+- [`ModelConfiguration`（Apple Developer）](https://developer.apple.com/documentation/swiftdata/modelconfiguration)
+- [`FetchDescriptor`（Apple Developer）](https://developer.apple.com/documentation/swiftdata/fetchdescriptor)
+- [`SortDescriptor`（Apple Developer）](https://developer.apple.com/documentation/foundation/sortdescriptor)
 
 这一小段里，其实包含了两层事情：
 
@@ -431,10 +444,6 @@ return try ModelContainer(for: TodoItem.self, configurations: configuration)
 
 - 当前这次插入、读取、修改、删除，究竟发生在什么上下文里
 
-对应官方文档：
-
-- [`ModelContext`（Apple Developer）](https://developer.apple.com/documentation/swiftdata/modelcontext)
-
 先把“上下文”说得具体一点。
 
 这里的上下文不是为了显得专业才加上的术语，可以直接把它看成：
@@ -447,6 +456,10 @@ return try ModelContainer(for: TodoItem.self, configurations: configuration)
 
 - `ModelContainer` 更像整套持久化系统的底座
 - `ModelContext` 更像你这一次具体操作数据时所在的工作区
+
+对应官方文档：
+
+- [`ModelContext`（Apple Developer）](https://developer.apple.com/documentation/swiftdata/modelcontext)
 
 最小启动代码通常长这样：
 
@@ -525,6 +538,20 @@ struct TodoStore {
     }
 }
 ```
+
+这一段第一次把“读取描述”显式写出来，所以也值得把两个类型补成最小导读：
+
+`FetchDescriptor`
+
+- 它解决的问题：把“我要查什么模型、按什么条件、按什么顺序”描述成一个对象。
+- 本章常用成员：初始化时的 `sortBy`
+- 当前代码里怎么理解：它是 `context.fetch(...)` 前的一份查询说明书。
+
+`SortDescriptor`
+
+- 它解决的问题：把排序规则写成可组合的描述，而不是查出来后再临时排序。
+- 本章常用成员：排序键路径、`order`
+- 当前代码里怎么理解：这里它负责保证待办按 `createdAt` 有稳定顺序。
 
 这个类型不是 SwiftData 强制要求的。它只是一个很薄的“存储入口”，方便把读取和写入动作收口。
 

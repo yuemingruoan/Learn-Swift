@@ -121,6 +121,26 @@ import Foundation
 let fm = FileManager.default
 ```
 
+`FileManager`
+
+- 它解决的问题：作为文件系统操作入口，统一负责找目录、查存在、建目录、删文件。
+- 本章常用成员：`default`、`temporaryDirectory`
+- 本章常用函数：`url(for:in:appropriateFor:create:)`、`fileExists(atPath:isDirectory:)`、`createDirectory(at:withIntermediateDirectories:attributes:)`、`removeItem(at:)`
+- 当前代码里怎么理解：后面不管是缓存文件还是本地 store 文件，第一步都离不开它。
+
+`URL`
+
+- 它解决的问题：稳定表示本地文件位置，而不是自己手写路径字符串。
+- 本章常用成员：`path`、`lastPathComponent`
+- 本章常用函数：`appendingPathComponent(_:)`、`appendingPathComponent(_:isDirectory:)`
+- 当前代码里怎么理解：它既可以表示目录，也可以表示文件。
+
+对应文档：
+
+- [`FileManager`（Apple Developer）](https://developer.apple.com/documentation/foundation/filemanager)
+- [`URL`（Apple Developer）](https://developer.apple.com/documentation/foundation/url)
+- [`Data`（Apple Developer）](https://developer.apple.com/documentation/foundation/data)
+
 如果你去看 Apple Developer 文档，会发现 `FileManager` 并不是只认识 `Documents` 和 `Caches`。它内部有一组专门的目录枚举：
 
 - `FileManager.SearchPathDirectory`
@@ -218,6 +238,23 @@ let documentsURL = try fm.url(
 )
 ```
 
+`url(for:in:appropriateFor:create:)`
+
+- 参数：
+  - `for`：想要哪一类标准目录
+  - `in`：在哪个 domain 里找
+  - `appropriateFor`：是否参考另一个 URL 决定位置
+  - `create`：目录不存在时是否允许创建
+- 返回值：
+  - 目标目录 `URL`
+- 作用：
+  - 向系统请求当前环境下真正可用的标准目录位置
+
+对应文档：
+
+- [`url(for:in:appropriateFor:create:)`（Apple Developer）](https://developer.apple.com/documentation/foundation/filemanager/url%28for%3Ain%3Aappropriatefor%3Acreate%3A%29)
+- [`temporaryDirectory`（Apple Developer）](https://developer.apple.com/documentation/foundation/filemanager/temporarydirectory)
+
 这四个参数最好按顺序理解：
 
 - `for: .documentDirectory`
@@ -281,6 +318,32 @@ let noteInFolderURL = folderURL.appendingPathComponent("note.txt")
 
 这里不要用字符串手写 `"/notes/note.txt"` 去拼接。`URL` 的 `appendingPathComponent` 会更稳健，也更符合“用类型表达意图”的风格。
 
+`appendingPathComponent(_:)`
+
+- 参数：
+  - 一个路径片段，例如 `"note.txt"`
+- 返回值：
+  - 新的 `URL`
+- 作用：
+  - 在已有 URL 末尾继续拼出一个子路径，常用于文件名
+
+`appendingPathComponent(_:isDirectory:)`
+
+- 参数：
+  - 路径片段
+  - `isDirectory`：这段路径是否代表目录
+- 返回值：
+  - 新的 `URL`
+- 作用：
+  - 在拼接路径时把“这是目录还是文件”的意图表达清楚
+
+后面第 `43` 章缓存文件路径和第 `44` 章 SwiftData store 路径，都会直接复用这套写法。
+
+对应文档：
+
+- [`appendingPathComponent(_:)`（Apple Developer）](https://developer.apple.com/documentation/foundation/url/appendingpathcomponent%28_%3A%29)
+- [`appendingPathComponent(_:isDirectory:)`（Apple Developer）](https://developer.apple.com/documentation/foundation/url/appendingpathcomponent%28_%3Aisdirectory%3A%29)
+
 #### 4.3 文件/目录是否存在：先判断再处理失败路径
 
 最常用的是按路径检查（`URL` 提供 `.path`）：
@@ -297,6 +360,20 @@ if exists && isDirectory.boolValue {
     print("不存在")
 }
 ```
+
+`fileExists(atPath:isDirectory:)`
+
+- 参数：
+  - 路径字符串
+  - 一个可回写“是否为目录”的变量
+- 返回值：
+  - `Bool`
+- 作用：
+  - 检查这条路径上是否真的有文件系统对象，并区分它是文件还是目录
+
+对应文档：
+
+- [`fileExists(atPath:isDirectory:)`（Apple Developer）](https://developer.apple.com/documentation/foundation/filemanager/fileexists%28atpath%3Aisdirectory%3A%29)
 
 这里需要解释一下：
 
@@ -356,6 +433,23 @@ try fm.createDirectory(
 
 `withIntermediateDirectories: true` 的含义是：如果中间层级不存在，也一并创建（类似 `mkdir -p`）。
 
+`createDirectory(at:withIntermediateDirectories:attributes:)`
+
+- 参数：
+  - `at`：目标目录 URL
+  - `withIntermediateDirectories`：是否递归创建中间目录
+  - `attributes`：附加文件属性，入门阶段通常传 `nil`
+- 返回值：
+  - `Void`
+- 作用：
+  - 在真正写文件前，保证目标目录结构已经存在
+
+这也是后面第 `43` 章、`44` 章反复出现 `fm.createDirectory(...)` 的原因：先把目录准备好，后续写缓存文件或 store 文件时才不会因为父目录不存在而失败。
+
+对应文档：
+
+- [`createDirectory(at:withIntermediateDirectories:attributes:)`（Apple Developer）](https://developer.apple.com/documentation/foundation/filemanager/createdirectory%28at%3Awithintermediatedirectories%3Aattributes%3A%29)
+
 ### 5. 写入与读取：String 与 Data 的两条最小链路
 
 本章只讲两个最常见的落盘形态：
@@ -400,6 +494,30 @@ let readBackData = try Data(contentsOf: noteFileURL)
 print("bytes:", readBackData.count)
 ```
 
+`write(to:options:)`
+
+- 参数：
+  - 目标文件 `URL`
+  - 写入选项，例如 `.atomic`
+- 返回值：
+  - `Void`
+- 作用：
+  - 把当前 `Data` 真正写入磁盘文件
+
+`init(contentsOf:)`
+
+- 参数：
+  - 要读取的文件 `URL`
+- 返回值：
+  - 读回来的 `Data`
+- 作用：
+  - 从文件读出原始字节，后面可以继续转成 `String`、JSON 或别的结构
+
+对应文档：
+
+- [`Data.write(to:options:)`（Apple Developer）](https://developer.apple.com/documentation/foundation/data/write%28to%3Aoptions%3A%29)
+- [`Data.init(contentsOf:)`（Apple Developer）](https://developer.apple.com/documentation/foundation/data/init%28contentsof%3Aoptions%3A%29)
+
 如果你确信它是 UTF-8 文本，也可以把 `Data` 转回 `String`：
 
 ```swift
@@ -440,6 +558,21 @@ if fm.fileExists(atPath: noteFileURL.path) {
     print("file not found:", noteFileURL.lastPathComponent)
 }
 ```
+
+`removeItem(at:)`
+
+- 参数：
+  - 目标文件或目录 `URL`
+- 返回值：
+  - `Void`
+- 作用：
+  - 删除某个已存在的文件系统对象
+
+这会在下一章的坏缓存恢复里直接复用，所以先在这里建立认识更顺手。
+
+对应文档：
+
+- [`removeItem(at:)`（Apple Developer）](https://developer.apple.com/documentation/foundation/filemanager/removeitem%28at%3A%29)
 
 这种写法的价值在于：你能把“文件不存在”和“读取失败”分开处理。对缓存来说，这两个分支的业务含义通常完全不同：
 

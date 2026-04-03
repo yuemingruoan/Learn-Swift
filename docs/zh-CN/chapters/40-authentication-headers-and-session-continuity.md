@@ -87,6 +87,27 @@ var request = URLRequest(url: url)
 request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 ```
 
+`setValue(_:forHTTPHeaderField:)`
+
+- 参数：
+  - 第一个参数：要写入的 Header 值，例如 `"Bearer \(token)"`
+  - 第二个参数：Header 字段名，例如 `"Authorization"`
+- 返回值：
+  - `Void`
+- 作用：
+  - 给请求设置或覆盖指定 Header
+
+`URLRequest`
+
+- 它解决的问题：把“请求 URL + 方法 + Header + Body”收成一个系统可发送对象。
+- 本章常用成员：`init(url:)`、`setValue(_:forHTTPHeaderField:)`
+- 当前代码里怎么理解：Bearer Token 最终不是存在 DTO 里，而是写进这个请求对象里。
+
+对应文档：
+
+- [`URLRequest`（Apple Developer）](https://developer.apple.com/documentation/foundation/urlrequest)
+- [`setValue(_:forHTTPHeaderField:)`（Apple Developer）](https://developer.apple.com/documentation/foundation/nsmutableurlrequest/setvalue%28_%3Aforhttpheaderfield%3A%29)
+
 这一行的位置很重要：
 
 - 它应该发生在“把请求发出去”之前
@@ -131,6 +152,23 @@ Cookie: session_id=...
 #### Cookie的持久化
 
 在 `URLSession` 体系里，Cookie 通常由系统的 Cookie 存储（`HTTPCookieStorage`）来管理。
+
+`HTTPCookieStorage`
+
+- 它解决的问题：集中管理当前进程或会话中的 Cookie。
+- 本章常用成员：`shared`、`cookies`
+- 当前代码里怎么理解：服务端下发 Cookie 后，后续请求是否自动携带，通常和这里以及 session 配置有关。
+
+`URLSessionConfiguration`
+
+- 它解决的问题：决定一个 `URLSession` 在 Cookie、缓存、超时等方面怎么工作。
+- 本章常用理解：Cookie 行为并不是“魔法”，而是受 session 配置影响。
+- 当前代码里怎么理解：Cookie 能否自动延续登录态，通常不是 DTO 的事，而是请求会话层的事。
+
+对应文档：
+
+- [`HTTPCookieStorage`（Apple Developer）](https://developer.apple.com/documentation/foundation/httpcookiestorage)
+- [`URLSessionConfiguration`（Apple Developer）](https://developer.apple.com/documentation/foundation/urlsessionconfiguration)
 
 先记住一个对当前阶段够用的结论：
 
@@ -250,6 +288,21 @@ extension Endpoint {
     }
 }
 ```
+
+`makeAuthenticatedRequest(baseURL:authState:)`
+
+- 参数：
+  - `baseURL`：服务根地址
+  - `authState`：当前登录态，至少要能拿到 token
+- 返回值：
+  - `URLRequest`
+- 作用：
+  - 先复用第 39 章的基础请求构造，再按鉴权要求补上身份信息
+
+这里也可以把“Cookie 模式为什么没手写 Header”理解清楚：
+
+- Bearer Token：你显式调用 `setValue(_:forHTTPHeaderField:)`
+- Cookie Session：通常交给 `URLSession + HTTPCookieStorage` 在请求发送时自动参与
 
 这段代码故意写得很直白：
 

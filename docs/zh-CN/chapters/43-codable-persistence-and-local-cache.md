@@ -167,6 +167,19 @@ struct CacheEnvelope<Value: Codable>: Codable {
 - 解码可能失败
 - 文件不存在不是错误，而是缓存缺失
 
+其中：
+
+- 路径拼接、目录创建、文件存在性判断
+  - 这些基础动作都已经在第 `42` 章讲过
+- 本章新增重点
+  - 是“怎么把模型编码成 JSON，再从 JSON 恢复回来”
+
+对应文档：
+
+- [`JSONEncoder`（Apple Developer）](https://developer.apple.com/documentation/foundation/jsonencoder)
+- [`JSONDecoder`（Apple Developer）](https://developer.apple.com/documentation/foundation/jsondecoder)
+- [`Data`（Apple Developer）](https://developer.apple.com/documentation/foundation/data)
+
 ### 1. 设计缓存文件地址
 
 ```swift
@@ -201,6 +214,16 @@ enum AppPaths {
 
 这段代码的作用是统一决定缓存写入位置，避免在业务代码里到处拼接路径。
 
+这里出现的：
+
+- `.appendingPathComponent(...)`
+- `fm.createDirectory(...)`
+
+都属于第 `42` 章已经铺好的文件系统基础。你在这里更应该关注的是：
+
+- 为什么缓存放 `Caches`
+- 为什么缓存文件位置要统一收口到一个函数里
+
 ### 2. 保存快照：编码 + 原子写入
 
 ```swift
@@ -222,6 +245,21 @@ func saveSnapshot<T: Encodable>(_ value: T, to fileURL: URL) throws {
     }
 }
 ```
+
+`JSONEncoder`
+
+- 它解决的问题：把遵守 `Encodable` 的 Swift 值转成 JSON 字节。
+- 本章常用成员：`outputFormatting`、`encode(_:)`
+- 当前代码里怎么理解：它负责把快照值准备成最终可落盘的 `Data`。
+
+`encode(_:)`
+
+- 参数：
+  - 一个遵守 `Encodable` 的值
+- 返回值：
+  - 编码后的 `Data`
+- 作用：
+  - 把内存中的快照值转成 JSON 字节，交给 `Data.write(to:options:)` 落盘
 
 这里打开 `.prettyPrinted` 和 `.sortedKeys`，是为了让教学阶段更容易直接打开文件看内容，而不是为了性能。
 
@@ -255,6 +293,22 @@ func loadSnapshot<T: Decodable>(_ type: T.Type, from fileURL: URL) throws -> T? 
     }
 }
 ```
+
+`JSONDecoder`
+
+- 它解决的问题：把 JSON 字节恢复成 Swift 值。
+- 本章常用成员：`decode(_:from:)`
+- 当前代码里怎么理解：它负责把文件里读出来的字节恢复成 `CacheEnvelope<[TodoSnapshot]>` 这类类型。
+
+`decode(_:from:)`
+
+- 参数：
+  - 目标类型，例如 `CacheEnvelope<[TodoSnapshot]>.self`
+  - 原始 `Data`
+- 返回值：
+  - 解码后的 Swift 值
+- 作用：
+  - 把 JSON 数据恢复成当前代码真正要读取的缓存模型
 
 这个函数最重要的地方在于它把两件事分开了：
 
@@ -322,6 +376,19 @@ func deleteFileIfExists(_ url: URL) {
     }
 }
 ```
+
+`removeItem(at:)`
+
+- 参数：
+  - 要删除的文件 URL
+- 返回值：
+  - `Void`
+- 作用：
+  - 在检测到缓存损坏后，把旧文件清掉，给后续重新请求和回写留出干净起点
+
+对应文档：
+
+- [`removeItem(at:)`（Apple Developer）](https://developer.apple.com/documentation/foundation/filemanager/removeitem%28at%3A%29)
 
 这一章故意采用最朴素的恢复策略：
 

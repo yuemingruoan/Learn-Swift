@@ -19,7 +19,7 @@
 - 在网络层里正确识别“超时”属于网络错误，而不是 HTTP 状态码
 - 处理“下载返回的是二进制内容（Data 或文件 URL）”这种与 JSON API 完全不同的响应路径，并为第 `42` 章的“落盘保存”做认知铺垫
 
-本章重点放在概念拆分、请求描述差异与响应处理差异。
+本章重点放在概念拆分，以及请求描述和响应处理到底哪里不一样。
 
 本章不引入 UI，我们只聚焦网络层与数据建模。
 
@@ -27,7 +27,7 @@
 
 ## 本章怎么读
 
-这一章可以按“差异点”来读，而不是单纯地记忆API ：
+这一章最好按“差异点”来读，不要只背 API：
 
 1. 先把“请求描述”统一起来
 - 查询参数、分页参数、超时配置，本质上都是在补全请求描述：`URL + method + headers + query + body + timeout...`
@@ -44,7 +44,7 @@
 
 ### 0. 开场：为什么鉴权之后还不够
 
-在第 `38` 章，我们用 `URLSession` 把“最小 GET / POST + JSON 收发”跑通了；在第 `39-40` 章，我们开始把请求分层、把错误建模，并加入了 header / 鉴权信息。
+第 `38` 章我们把最小的 GET / POST + JSON 收发跑通了；第 `39-40` 章又把请求分层、错误建模和鉴权信息补了上来。
 
 但真实项目里，你会很快遇到下面四类“常见但不再最小”的需求：
 
@@ -53,13 +53,13 @@
 - **超时**：某些请求应该设置较短的超时时间（例如搜索），某些请求容忍更久（例如下载）
 - **下载**：响应不是 JSON，而是图片、压缩包、PDF、音频等二进制内容
 
-这一章的目标不是讲 HTTP 规范大全，而是把这四类场景的“请求描述差异”和“响应处理差异”落到你前两章建立的网络层上。
+这一章不打算把 HTTP 讲成一套大百科。我们只看这四类场景落到现有网络层以后，代码会多出哪些差异。
 
 ### 1. 查询参数：把“筛选/排序/搜索”放进 URL
 
 #### 1.1 查询参数适合表达什么
 
-最实用的判断方式是：当你需要表达“读取一个资源集合时的**视图条件**”时，用查询参数通常更合适，例如：
+一个更实用的判断是：当你表达的是“读取一个资源集合时的条件”，查询参数通常更合适，例如：
 
 - 搜索关键字：`q=swift`
 - 过滤条件：`completed=true`
@@ -129,7 +129,7 @@ extension Endpoint {
 }
 ```
 
-这样你的业务调用点只需要写：
+这样一来，业务调用点只需要写：
 
 - “我想要什么 endpoint”
 - “我希望它解码成什么 DTO”
@@ -145,11 +145,11 @@ let page: PageDTO<TodoDTO> = try await client.send(
 
 ### 2. 分页：请求里多了“我要哪一段”，响应里多了“还剩多少”
 
-分页是这章里“响应处理差异”最典型的一类：它不仅改变请求参数，还改变响应结构。
+分页是这一章里最典型的“响应处理差异”：它不仅改了请求参数，也改了响应结构。
 
 #### 2.1 为什么列表接口经常不是一次性全给完
 
-原因你不需要背太多理论，只要记住三点：
+这里不用背太多理论，先记三点就够了：
 
 - 数据量可能很大，一次性返回会慢、会超时、会占内存
 - 服务器通常需要保护自身，避免被“一次请求拉全量”打垮
@@ -169,7 +169,7 @@ let page: PageDTO<TodoDTO> = try await client.send(
 - 服务器返回一个 `nextCursor`，客户端下次带上它
 - 示例：`/todos?cursor=eyJpZCI6MTAwfQ&limit=20`
 
-这三者在网络层里都可以统一成一个概念：**分页也是 query 的一部分**。
+这三种写法放到网络层里，其实都能归到一件事上：**分页也是 query 的一部分**。
 
 #### 2.3 最小分页响应：把“列表”和“元信息”一起建模
 
@@ -208,14 +208,14 @@ struct PageDTO<Item: Decodable>: Decodable {
 }
 ```
 
-这里的 `Item: Decodable` 跟第 39 章的 `T: Decodable` 是同一种写法：
+这里的 `Item: Decodable` 和第 39 章的 `T: Decodable` 是一回事：
 
 - `Item` 仍然是未知类型
 - 但它必须满足 `Decodable`
 
 原因也很直接：如果 `items` 里的单个元素都不能解码，那么整个 `PageDTO<Item>` 当然也无法从 JSON 解出来。
 
-这里的关键点不是“字段名必须这样”，而是你要意识到：
+这里重点不在字段名，而在于你要意识到：
 
 - **分页改变了响应结构**：不再是 `[Item]`，而是 `PageDTO<Item>`
 - 因此你的网络层在 `decode` 阶段要么支持泛型容器，要么允许 endpoint 指定不同的解码目标
@@ -227,7 +227,7 @@ struct PageDTO<Item: Decodable>: Decodable {
 - 输入：分页参数应该进入 `Endpoint.queryItems`（或你的 query 模型）
 - 输出：网络层的返回值不应该直接丢掉分页元信息（例如 `total` / `nextCursor`）
 
-如果你当前网络层的调用点只允许返回 `T: Decodable`，那分页依然能做，只是你要让 `T` 变成 `PageDTO<ItemDTO>`，而不是 `ItemDTO`。也就是说：**分页扩展的是 DTO 形状，不是第 39 章的核心契约。**
+如果你当前网络层的调用点只允许返回 `T: Decodable`，分页照样能接，只是这时的 `T` 要变成 `PageDTO<ItemDTO>`，而不是 `ItemDTO`。也就是说：**分页扩展的是 DTO 形状，不是第 39 章的核心契约。**
 
 ### 3. 超时：它属于网络错误，不是 HTTP 状态码
 
@@ -249,7 +249,7 @@ HTTP 状态码来自服务器响应报文（例如 `HTTP/1.1 200 OK`）。如果
 - `timeoutIntervalForResource`
   - 通常理解为：整个资源加载的总时长上限（更偏资源传输）
 
-此处不便引入过多细节，你可以先记住一个实践原则：
+这里先不往细节里钻，记住一个实践判断就够了：
 
 - 搜索、列表、普通 JSON API：更短的 request timeout
 - 下载、弱网容忍任务：更长的 resource timeout，或采用更合适的下载方案
@@ -264,7 +264,7 @@ request.httpMethod = "GET"
 request.timeoutInterval = 10 // 秒
 ```
 
-这再次体现了“请求描述差异”：
+这又回到了“请求描述差异”：
 
 - 你不再只是“拿着 URL 发请求”
 - 你需要用 `URLRequest` 把 method、headers、timeout 等信息描述完整
@@ -281,7 +281,7 @@ request.timeoutInterval = 10 // 秒
 - `NetworkError.transport(URLError)`
 - 或者更细：`NetworkError.timeout`
 
-重点是：不要把它当成 `badStatusCode`，也不要试图从 `HTTPURLResponse.statusCode` 判断超时。
+重点是，不要把它归到 `badStatusCode`，也不要试图从 `HTTPURLResponse.statusCode` 去判断超时。
 
 ### 4. 响应头与下载信息：下载场景经常需要看 header
 
@@ -306,7 +306,7 @@ request.timeoutInterval = 10 // 秒
 
 #### 5.1 JSON 请求与二进制下载的核心差异
 
-把“JSON API”与“下载”对比，你会发现差异几乎完全落在“响应处理”阶段：
+把“JSON API”和“下载”放在一起看，差异几乎都落在“响应处理”阶段：
 
 1. JSON API（第 38 章的主线）
 - 请求：通常 `data(for:)` 或 `data(from:)`
@@ -364,16 +364,16 @@ print("Content-Type:", contentType ?? "<none>")
 - `func sendData(_ endpoint: Endpoint) async throws -> Data`
 - `func download(_ endpoint: Endpoint) async throws -> (temporaryFileURL: URL, response: HTTPURLResponse)`
 
-关键点是：
+这里真正要抓的是：
 
 - JSON endpoint 仍然沿用“`Endpoint + Decodable`”这条主线
 - 下载 endpoint 只是多了一条“返回原始内容或临时文件 URL”的分支能力
 
 ### 6. 把这些能力接回前两章的网络层
 
-这一节只讨论“怎样接回去”，不要求你把网络层重写成某种固定形态。
+这一节只讨论“怎么接回去”，不要求你把网络层改写成某种固定模板。
 
-跟着前面的学习你应该已经有一个可用的网络层了，接下来我们来检查一下功能是否齐全
+跟着前面的章节走到这里，你手里应该已经有一个能用的网络层了。接下来就看它还缺哪些口子。
 
 #### 6.1 请求描述维度：query / timeout / headers
 
@@ -408,7 +408,7 @@ print("Content-Type:", contentType ?? "<none>")
 - 复杂重试（指数退避、熔断、幂等性判断）
 - 断点续传、后台下载、下载进度回调
 
-把请求描述和响应处理的差异“正确表达出来”，就已经足够为后续章节铺路。
+把请求描述和响应处理的差异放对位置，就已经足够给后面的章节铺路了。
 
 ## 边界说明（本章明确不做什么）
 

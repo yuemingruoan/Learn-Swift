@@ -12,7 +12,7 @@
 
 学完这一章后，你应该能够：
 
-- 说清为什么只会 CRUD 还不足以支撑真实本地数据管理
+- 理解为什么只会 CRUD 还不足以支撑真实本地数据管理
 - 用“查询、排序、关系、删除规则”四个维度拆解读取与一致性问题
 - 理解 `#Predicate`、`FetchDescriptor`、`SortDescriptor` 在开发中分别承担什么职责
 - 在 `TodoList + TodoItem` 的一对多场景里明确删除语义，而不是把关系处理留给默认行为
@@ -29,12 +29,12 @@
 - 我想让待办项属于某个待办列表
 - 删掉一个待办列表时，列表里的待办到底该怎么办
 
-这些问题的共同点是：
+这些问题有个共同点：
 
 - 它们已经不是“会不会保存”
 - 而是“如何读取”和“如何保证关系一致”
 
-所以这一章的主线不是更多语法，而是更接近真实开发的数据管理问题。
+所以这一章不是继续堆语法，而是开始碰真正的数据管理问题。
 
 ## 场景升级：从单个待办，升级到“列表里的待办”
 
@@ -72,7 +72,7 @@
 
 SwiftData 很适合处理结构化条件和稳定排序，但它不是 Swift 运行时，也不是你的全部业务逻辑。
 
-所以这章先立一条非常实用的总则：
+这一章先立一条总则：
 
 - 能被持久化层稳定表达的条件和排序，就放进查询描述里
 - 不能稳定表达的复杂业务规则，就留在内存或业务层处理
@@ -146,56 +146,95 @@ final class TodoItem {
 - 现在待办已经可以属于某个列表
 - 删除列表时，系统会按我们定义的规则处理关联待办
 
-类型补充：
+这里第一次写到关系声明，先记住两件事：
 
-- `@Relationship(deleteRule:inverse:)`：声明模型之间的关系，并指定删除时如何处理关联对象
-- `deleteRule: .nullify`：删除 `TodoList` 时，不删除关联 `TodoItem`，而是把它们的 `list` 设为 `nil`
-- `inverse: \TodoItem.list`：指出这段关系在另一侧对应的是 `TodoItem` 的 `list` 属性
-- `TodoList.items`：父对象视角的一对多关系
-- `TodoItem.list`：子对象视角的“属于哪个列表”
+- `@Relationship(deleteRule: .nullify, inverse: \TodoItem.list)` 表示 `TodoList.items` 和 `TodoItem.list` 是一对多关系
+- `.nullify` 表示删除列表时，不删除待办，只把它们变成未归类
+
+为了让正文不依赖 demo，这里先把后面会用到的最小存储入口放出来：
+
+```swift
+struct TodoStore {
+    let context: ModelContext
+
+    func fetchUndoneTodos(in listName: String) throws -> [TodoItem] {
+        let predicate = #Predicate<TodoItem> { item in
+            item.isDone == false && item.list?.name == listName
+        }
+
+        let descriptor = FetchDescriptor<TodoItem>(
+            predicate: predicate,
+            sortBy: [
+                SortDescriptor(\TodoItem.priority, order: .reverse),
+                SortDescriptor(\TodoItem.createdAt, order: .forward)
+            ]
+        )
+        return try context.fetch(descriptor)
+    }
+
+    func fetchInboxTodos() throws -> [TodoItem] {
+        let predicate = #Predicate<TodoItem> { item in
+            item.list == nil
+        }
+
+        let descriptor = FetchDescriptor<TodoItem>(
+            predicate: predicate,
+            sortBy: [SortDescriptor(\TodoItem.createdAt, order: .forward)]
+        )
+
+        return try context.fetch(descriptor)
+    }
+
+    func deleteList(_ list: TodoList) throws {
+        context.delete(list)
+        try context.save()
+    }
+}
+```
+
+如果你想把这套代码单独跑起来，最小启动方式和第 44 章一致：
+
+```swift
+let container = try ModelContainer(for: TodoList.self, TodoItem.self)
+let context = ModelContext(container)
+let store = TodoStore(context: context)
+```
 
 ### 一个最常见的读取需求
 
 “读出 `Today` 列表里所有未完成的待办”。
 
-对应的查询描述可以写成：
+在上面这份最小 `TodoStore` 里，这个读取函数已经把“筛选”和“排序”放在了一起：
 
 ```swift
-func fetchUndoneTodos(in listName: String, context: ModelContext) throws -> [TodoItem] {
+func fetchUndoneTodos(in listName: String) throws -> [TodoItem] {
     let predicate = #Predicate<TodoItem> { item in
         item.isDone == false && item.list?.name == listName
     }
 
-    let descriptor = FetchDescriptor<TodoItem>(predicate: predicate)
+    let descriptor = FetchDescriptor<TodoItem>(
+        predicate: predicate,
+        sortBy: [
+            SortDescriptor(\TodoItem.priority, order: .reverse),
+            SortDescriptor(\TodoItem.createdAt, order: .forward)
+        ]
+    )
     return try context.fetch(descriptor)
 }
 ```
 
-从开发角度看，这段代码最重要的不是形式，而是职责分离：
+这段代码最值得看的，是职责怎么分开：
 
 - predicate 决定“读哪些”
 - fetch 决定“现在去拿结果”
 
-函数声明：
-
-```swift
-func fetchUndoneTodos(in listName: String, context: ModelContext) throws -> [TodoItem]
-```
-
-参数：
+这里只补一个参数说明：
 
 - `listName`：要读取的列表名称，例如 `Today`
-- `context`：执行查询的 `ModelContext`
 
-返回值：
+这段代码的作用是读取指定列表下所有未完成待办，并按正文里定义的顺序给出稳定结果。
 
-- `[TodoItem]`：指定列表下所有未完成待办
-
-作用：
-
-- 读取指定列表下所有未完成待办
-
-这能带来的实际价值是：
+这样写有几个直接的好处：
 
 - 读取需求更清楚
 - 代码更容易集中到存储层
@@ -207,18 +246,18 @@ func fetchUndoneTodos(in listName: String, context: ModelContext) throws -> [Tod
 
 - 把所有业务判断都往 predicate 里塞
 
-这通常会让问题变糟。下面这些情况就应该先停一下：
+这样写下去通常会越来越乱。碰到下面这些情况就该停一下：
 
 - 依赖复杂文本匹配、本地化或打分逻辑
 - 依赖外部状态，例如网络、权限、远端开关
 - 依赖你自定义函数或复杂控制流
 
-更稳的做法通常是两段式：
+更稳的做法通常分两段：
 
 1. 先让持久化层完成粗筛，例如“某列表下未完成的待办”
 2. 再对较小结果集做内存内的精加工
 
-这不是妥协，而是职责边界。
+这不是退而求其次，而是分工本来就该这么切。
 
 ## 2. 排序：让列表顺序稳定、可解释
 
@@ -231,49 +270,14 @@ func fetchUndoneTodos(in listName: String, context: ModelContext) throws -> [Tod
 
 这种需求不应该留到 UI 层“看着不顺再补一把排序”，因为它本质上是读取结果的一部分。
 
-### 把排序写进查询描述
+### 把排序写进同一个查询描述
 
-```swift
-func fetchUndoneTodosSorted(in listName: String, context: ModelContext) throws -> [TodoItem] {
-    let predicate = #Predicate<TodoItem> { item in
-        item.isDone == false && item.list?.name == listName
-    }
+这里没有额外再写一个“只负责排序”的函数，而是直接在 `fetchUndoneTodos` 里把排序规则和筛选条件一起写清楚。
 
-    let descriptor = FetchDescriptor<TodoItem>(
-        predicate: predicate,
-        sortBy: [
-            SortDescriptor(\TodoItem.priority, order: .reverse),
-            SortDescriptor(\TodoItem.createdAt, order: .forward)
-        ]
-    )
-
-    return try context.fetch(descriptor)
-}
-```
-
-这里的工程意义非常直接：
+这里的意思很直接：
 
 - `priority` 决定主要先后顺序
 - `createdAt` 作为第二排序键，保证同优先级时列表仍然稳定
-
-函数声明：
-
-```swift
-func fetchUndoneTodosSorted(in listName: String, context: ModelContext) throws -> [TodoItem]
-```
-
-参数：
-
-- `listName`：目标列表名称
-- `context`：执行查询的 `ModelContext`
-
-返回值：
-
-- `[TodoItem]`：指定列表下未完成待办的稳定排序结果
-
-作用：
-
-- 读取指定列表下未完成待办，并按优先级和创建时间返回稳定排序结果
 
 如果你少了第二排序键，列表看起来就可能“抖动”。这不是 UI 小毛病，而是读取规则没定义完整。
 
@@ -315,8 +319,10 @@ func fetchUndoneTodosSorted(in listName: String, context: ModelContext) throws -
 
 例如读取未归类待办：
 
+同一个 `TodoStore` 里，读取未归类待办可以这样写：
+
 ```swift
-func fetchInboxTodos(context: ModelContext) throws -> [TodoItem] {
+func fetchInboxTodos() throws -> [TodoItem] {
     let predicate = #Predicate<TodoItem> { item in
         item.list == nil
     }
@@ -330,36 +336,22 @@ func fetchInboxTodos(context: ModelContext) throws -> [TodoItem] {
 }
 ```
 
-你应该从这里建立一个很重要的开发意识：
+这里要顺手建立一个意识：
 
 - 关系一出现，读取需求就不再只是“取全部数据”
 - 它会直接影响你的存储接口长什么样
 
-函数声明：
+这里没有额外参数要解释。
 
-```swift
-func fetchInboxTodos(context: ModelContext) throws -> [TodoItem]
-```
-
-参数：
-
-- `context`：执行查询的 `ModelContext`
-
-返回值：
-
-- `[TodoItem]`：所有未归类待办，也就是 `list == nil` 的待办
-
-作用：
-
-- 读取所有未归类待办
+这段代码的作用是读取所有未归类待办，也就是 `list == nil` 的待办。
 
 ### 关系带来的第二个变化：删除不再是“顺手删掉父对象”
 
-真正麻烦的地方在这里。
+真正麻烦的是这里。
 
 如果删掉一个 `TodoList`，对应的 `TodoItem` 到底怎么办？这不是 API 选择题，而是产品语义问题。
 
-在当前教程里，我们把 demo 默认策略设成 `nullify`：
+在当前教程里，我们把默认策略设成 `nullify`：
 
 - 删掉列表
 - 待办项不删除
@@ -403,7 +395,7 @@ func fetchTodos(
 ) throws -> [TodoItem]
 ```
 
-本章不急着把它抽成协议，但你已经该看到一个很实际的工程信号：
+本章先不把它抽成协议，但这里已经能看到一个很明确的工程信号：
 
 - 当读取需求越来越具体，存储层接口也必须开始变得明确
 

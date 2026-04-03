@@ -24,13 +24,13 @@
 
 - 远程接口已经拿到了一份待办列表，下一次启动应用时，能不能先把上次成功结果读出来？
 
-这类需求在真实开发里非常常见：
+这类需求在真实开发里很常见：
 
 - 首页列表希望更快出现内容
 - 网络失败时希望仍然展示上次成功结果
 - 某些只读数据没有必要每次都重新请求
 
-但你要先把边界讲清楚：本章讲的是**快照缓存**，不是数据库。
+先把边界卡住：本章讲的是**快照缓存**，不是数据库。
 
 所谓快照缓存，意思是：
 
@@ -121,7 +121,7 @@ struct TodoSnapshot: Codable, Equatable {
 }
 ```
 
-这里故意把 `completed` 映射成 `isDone`，目的不是炫技，而是强调一件事：
+这里把 `completed` 映射成 `isDone`，是为了强调一件事：
 
 - 本地保存格式是你自己定义的
 - 它可以更贴近当前应用的表达方式
@@ -136,13 +136,13 @@ struct CacheEnvelope<Value: Codable>: Codable {
 }
 ```
 
-为什么要多这一层？因为缓存文件通常不只保存数据本体，还会保存一些“解释这个缓存”的信息，例如：
+之所以多这一层，是因为缓存文件通常不只保存数据本体，还会顺手带上一些元信息，例如：
 
 - 写入时间
 - 版本号
 - 来源
 
-本章只用 `cachedAt`，已经足够说明快照文件也是你自己的格式设计。
+本章只用 `cachedAt`，已经够说明快照文件本身也是你定义的格式。
 
 ## 最小缓存链路：编码、落盘、读回、解码
 
@@ -159,7 +159,7 @@ struct CacheEnvelope<Value: Codable>: Codable {
 -> CacheEnvelope<[TodoSnapshot]>
 ```
 
-关键不是 API 名字，而是你要清楚：
+这里重要的不是 API 名字，而是下面这些失败点：
 
 - 编码可能失败
 - 写文件可能失败
@@ -172,17 +172,20 @@ struct CacheEnvelope<Value: Codable>: Codable {
 ```swift
 enum AppPaths {
     static func cacheFileURL(fileName: String) throws -> URL {
-        let base = try FileManager.default.url(
+        let fm = FileManager.default
+        let base = try fm.url(
             for: .cachesDirectory,
             in: .userDomainMask,
             appropriateFor: nil,
             create: true
         )
 
-        return base
+        let folder = base
             .appendingPathComponent("learn-swift", isDirectory: true)
             .appendingPathComponent("43-cache-demo", isDirectory: true)
-            .appendingPathComponent(fileName)
+
+        try fm.createDirectory(at: folder, withIntermediateDirectories: true)
+        return folder.appendingPathComponent(fileName)
     }
 }
 ```
@@ -192,23 +195,11 @@ enum AppPaths {
 - 这不是用户主动管理的文档
 - 这是应用为了性能和兜底保存的临时性结果
 
-函数声明：
-
-```swift
-static func cacheFileURL(fileName: String) throws -> URL
-```
-
-参数：
+这里只多看一个参数：
 
 - `fileName`：缓存文件名，例如 `todos.json`
 
-返回值：
-
-- `URL`：最终缓存文件的位置
-
-作用：
-
-- 统一决定缓存应该写到哪里，避免在业务代码里到处拼接路径
+这段代码的作用是统一决定缓存写入位置，避免在业务代码里到处拼接路径。
 
 ### 2. 保存快照：编码 + 原子写入
 
@@ -234,24 +225,12 @@ func saveSnapshot<T: Encodable>(_ value: T, to fileURL: URL) throws {
 
 这里打开 `.prettyPrinted` 和 `.sortedKeys`，是为了让教学阶段更容易直接打开文件看内容，而不是为了性能。
 
-函数声明：
-
-```swift
-func saveSnapshot<T: Encodable>(_ value: T, to fileURL: URL) throws
-```
-
-参数：
+这里真正需要看的参数有两个：
 
 - `value`：要保存的数据，要求遵守 `Encodable`
 - `fileURL`：目标文件位置
 
-返回值：
-
-- 无；成功时直接写入文件，失败时抛出错误
-
-作用：
-
-- 把内存中的快照编码成 JSON，并原子写入磁盘
+这段代码的作用是把内存中的快照编码成 JSON，并原子写入磁盘。
 
 ### 3. 读取快照：缺失是 `nil`，损坏是错误
 
@@ -282,24 +261,12 @@ func loadSnapshot<T: Decodable>(_ type: T.Type, from fileURL: URL) throws -> T? 
 - 文件不存在：缓存缺失
 - 文件存在但读/解码失败：缓存损坏或不兼容
 
-函数声明：
-
-```swift
-func loadSnapshot<T: Decodable>(_ type: T.Type, from fileURL: URL) throws -> T?
-```
-
-参数：
+参数里真正决定读取结果的有两个：
 
 - `type`：想读回来的目标类型，例如 `CacheEnvelope<[TodoSnapshot]>.self`
 - `fileURL`：缓存文件位置
 
-返回值：
-
-- `T?`：文件不存在时返回 `nil`；文件存在且解码成功时返回具体值；读取或解码失败时抛错
-
-作用：
-
-- 把“有没有缓存”和“缓存能不能读”清楚地区分开
+这段代码的作用是把“有没有缓存”和“缓存能不能读”清楚地区分开。
 
 实际开发里，这两个状态的处理完全不同，不能混成一句“读取失败”。
 
@@ -329,33 +296,18 @@ func loadCacheOrReportCorruption<T: Decodable>(
 }
 ```
 
-这不是语法洁癖，而是在为业务判断服务：
+这不是为了把代码写得“更讲究”，而是为了让业务分支更清楚：
 
 - `.hit`：直接用缓存
 - `.miss`：走远程
 - `.corrupted`：先恢复，再走远程
 
-函数声明：
-
-```swift
-func loadCacheOrReportCorruption<T: Decodable>(
-    _ type: T.Type,
-    from fileURL: URL
-) -> CacheLoadResult<T>
-```
-
-参数：
+参数仍然是这两个：
 
 - `type`：缓存文件里预期保存的数据类型
 - `fileURL`：缓存文件位置
 
-返回值：
-
-- `CacheLoadResult<T>`：把底层 `nil / throw / value` 三种结果提升成更适合业务分支判断的状态
-
-作用：
-
-- 把缓存读取结果规范成命中、缺失、损坏三种分支
+这段代码的作用是把底层的 `nil / throw / value` 三种结果规范成命中、缺失、损坏三种业务分支。
 
 ### 损坏时的最小恢复路径
 
@@ -377,31 +329,28 @@ func deleteFileIfExists(_ url: URL) {
 - 重新请求远程
 - 用新结果覆盖回去
 
-函数声明：
-
-```swift
-func deleteFileIfExists(_ url: URL)
-```
-
-参数：
+这里只需要看一个参数：
 
 - `url`：要删除的文件路径
 
-返回值：
+这段代码的作用是在检测到缓存损坏时执行最小恢复动作。
 
-- 无
-
-作用：
-
-- 在检测到缓存损坏时，执行最小恢复动作
-
-这样做的价值是：恢复路径简单、可解释、容易观察。
+这样写的好处是恢复路径简单，也方便观察。
 
 ## 把缓存接进真实的数据获取函数
 
-下面这个函数才是本章真正想让你学会的结构：
+下面给一份正文内可独立阅读的最小主流程。为了避免把注意力带偏，这里只给一个最小远程来源占位类型：
 
 ```swift
+struct FakeRemoteAPI {
+    func fetchTodos() async throws -> [TodoDTO] {
+        [
+            TodoDTO(id: 1, title: "复习 Codable 缓存链路", completed: false),
+            TodoDTO(id: 2, title: "验证缓存损坏恢复路径", completed: true)
+        ]
+    }
+}
+
 enum DataSource<Value> {
     case cache(Value)
     case remote(Value)
@@ -412,21 +361,25 @@ func getTodos(api: FakeRemoteAPI) async throws -> DataSource<[TodoSnapshot]> {
 
     switch loadCacheOrReportCorruption(CacheEnvelope<[TodoSnapshot]>.self, from: cacheURL) {
     case .hit(let envelope):
+        print("缓存命中：读取上次成功快照，cachedAt = \(envelope.cachedAt)")
         return .cache(envelope.value)
 
     case .miss:
-        break
+        print("缓存缺失：本地没有快照，准备走远程")
 
-    case .corrupted:
+    case .corrupted(let error):
+        print("缓存损坏：\(error)")
+        print("执行恢复：删除坏文件，再重新请求远程")
         deleteFileIfExists(cacheURL)
     }
 
-    let remoteDTOs = try await api.fetchTodos()
-    let snapshots = remoteDTOs.map(TodoSnapshot.init(dto:))
+    let dtos = try await api.fetchTodos()
+    let snapshots = dtos.map(TodoSnapshot.init(dto:))
 
     do {
-        let envelope = CacheEnvelope(cachedAt: .now, value: snapshots)
+        let envelope = CacheEnvelope(cachedAt: Date(), value: snapshots)
         try saveSnapshot(envelope, to: cacheURL)
+        print("远程成功：已把最新待办快照写回缓存")
     } catch {
         print("[warn] 回写缓存失败，但不影响主流程：\(error)")
     }
@@ -435,34 +388,21 @@ func getTodos(api: FakeRemoteAPI) async throws -> DataSource<[TodoSnapshot]> {
 }
 ```
 
-这里有两个非常重要的工程判断：
+这里有两个很关键的工程判断：
 
 - 缓存读取失败需要恢复，因为坏缓存会持续污染后续读取
 - 缓存写回失败不应阻断主流程，因为缓存只是优化，不是真理来源
 
-函数声明：
+这里只需要额外说明一个参数：
 
-```swift
-func getTodos(api: FakeRemoteAPI) async throws -> DataSource<[TodoSnapshot]>
-```
+- `api`：远程数据来源；这里先用一个最小 `FakeRemoteAPI` 占位，好让正文主流程能独立阅读
 
-参数：
+这段代码的作用是把“先查缓存，不行再查远程，并在成功后回写缓存”这条主流程收口到一个函数里。返回值用 `DataSource` 标记这次结果来自缓存还是远程。
 
-- `api`：远程数据来源，这里是演示用的 `FakeRemoteAPI`
+这里第一次出现两个关键类型：
 
-返回值：
-
-- `DataSource<[TodoSnapshot]>`：`.cache` 表示本次结果来自本地缓存，`.remote` 表示本次结果来自远程请求
-
-作用：
-
-- 把“先查缓存，不行再查远程，并在成功后回写缓存”这条主流程收口到一个函数里
-
-类型补充：
-
-- `CacheEnvelope<Value>`：缓存文件的外壳类型，除了真正的值 `value`，还保存 `cachedAt`
-- `DataSource<Value>`：结果来源标记，帮助调用端区分这次展示的是缓存还是远程数据
-- `URL`：文件路径类型；在文件系统、网络和系统目录 API 里都会频繁出现
+- `CacheEnvelope<Value>`：缓存文件的外壳，除了真正的数据，还保存 `cachedAt`
+- `DataSource<Value>`：结果来源标记，用来区分这次展示的是缓存还是远程数据
 
 这就是本章最核心的开发视角：
 
@@ -513,7 +453,7 @@ func getTodos(api: FakeRemoteAPI) async throws -> DataSource<[TodoSnapshot]>
 
 一旦需求变成这样，文件快照的代价就会迅速升高，因为你已经不是在“保存上次结果”，而是在“管理一条条本地记录”。
 
-这时，文件快照就不再是最顺手的方案了。你真正需要的是：
+这时，文件快照就不再顺手了。你需要的是：
 
 - 让本地数据更像一组可管理对象
 - 让增删改查围绕记录展开

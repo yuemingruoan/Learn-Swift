@@ -15,6 +15,8 @@
 - 说清为什么第 43 章的文件快照不适合继续承载“本地待办管理”
 - 用 `SwiftData` 跑通一条最小闭环：建模、创建容器、读取、插入、修改、删除、重启后读回
 - 理解 `@Model`、`ModelContainer`、`ModelContext` 各自在实际开发中解决什么问题
+- 开始建立持久化模型设计意识：哪些字段该存、哪些字段不该存、哪些字段适合给默认值、哪些字段应该做成可选
+- 对关系建模建立最低认知：一对多关系在 SwiftData 里长什么样，为什么“关系”本身也是建模问题
 - 区分“SwiftData 核心概念”和“项目里为了组织代码而加的一层 store”
 - 理解这套最小 CRUD 闭环的边界：它解决了“能保存”，但还没覆盖“怎么读更合理”
 
@@ -65,10 +67,13 @@ SwiftData 就是在这一步开始变得合适。
 本章正文统一采用这种纯 SwiftData 的起手方式：
 
 ```swift
-let container = try ModelContainer(for: TodoItem.self)
+let container = try ModelContainer(for: TodoList.self, TodoItem.self)
 let context = ModelContext(container)
 
-let item = TodoItem(title: "在本地新增一条待办")
+let list = TodoList(name: "收件箱")
+context.insert(list)
+
+let item = TodoItem(title: "在本地新增一条待办", list: list)
 context.insert(item)
 try context.save()
 ```
@@ -102,8 +107,9 @@ try context.save()
 
 1. 先看完整闭环在做什么，而不是先背术语
 2. 再看 `@Model`、`ModelContainer`、`ModelContext` 分别在这个闭环里扮演什么角色
-3. 然后看最小 CRUD 是如何围绕 `ModelContext` 完成的
-4. 最后再看为什么真实项目里常常会加一层 `TodoStore`
+3. 然后看“模型怎么设计”本身：字段、默认值、可选值、时间字段、关系
+4. 最后再看最小 CRUD 是如何围绕 `ModelContext` 完成的
+5. 再看为什么真实项目里常常会加一层 `TodoStore`
 
 如果你读完能独立写出这几个动作，本章就达标：
 
@@ -123,22 +129,43 @@ import Foundation
 import SwiftData
 
 @Model
+final class TodoList {
+    var name: String
+
+    @Relationship(inverse: \TodoItem.list)
+    var items: [TodoItem] = []
+
+    init(name: String) {
+        self.name = name
+    }
+}
+
+@Model
 final class TodoItem {
     var title: String
     var isDone: Bool
+    var priority: Int
+    var notes: String?
     var createdAt: Date
     var updatedAt: Date
+    var list: TodoList?
 
     init(
         title: String,
         isDone: Bool = false,
+        priority: Int = 0,
+        notes: String? = nil,
         createdAt: Date = .now,
-        updatedAt: Date = .now
+        updatedAt: Date = .now,
+        list: TodoList? = nil
     ) {
         self.title = title
         self.isDone = isDone
+        self.priority = priority
+        self.notes = notes
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.list = list
     }
 }
 
@@ -147,13 +174,36 @@ struct TodoStore {
 
     func fetchAll() throws -> [TodoItem] {
         let descriptor = FetchDescriptor<TodoItem>(
-            sortBy: [SortDescriptor(\TodoItem.createdAt, order: .forward)]
+            sortBy: [
+                SortDescriptor(\TodoItem.priority, order: .reverse),
+                SortDescriptor(\TodoItem.createdAt, order: .forward)
+            ]
         )
         return try context.fetch(descriptor)
     }
 
-    func add(title: String) throws {
-        let item = TodoItem(title: title)
+    func fetchLists() throws -> [TodoList] {
+        let descriptor = FetchDescriptor<TodoList>(
+            sortBy: [SortDescriptor(\TodoList.name, order: .forward)]
+        )
+        return try context.fetch(descriptor)
+    }
+
+    @discardableResult
+    func addList(name: String) throws -> TodoList {
+        let list = TodoList(name: name)
+        context.insert(list)
+        try context.save()
+        return list
+    }
+
+    func add(
+        title: String,
+        priority: Int = 0,
+        notes: String? = nil,
+        list: TodoList? = nil
+    ) throws {
+        let item = TodoItem(title: title, priority: priority, notes: notes, list: list)
         context.insert(item)
         try context.save()
     }
@@ -170,18 +220,19 @@ struct TodoStore {
     }
 }
 
-let container = try ModelContainer(for: TodoItem.self)
+let container = try ModelContainer(for: TodoList.self, TodoItem.self)
 let context = ModelContext(container)
 let store = TodoStore(context: context)
 
-try store.add(title: "在本地新增一条待办")
-try store.add(title: "验证 SwiftData 的最小 CRUD")
+let inbox = try store.addList(name: "收件箱")
+try store.add(title: "在本地新增一条待办", priority: 2, notes: "演示默认值和可选字段")
+try store.add(title: "验证 SwiftData 的最小 CRUD", priority: 1, list: inbox)
 
 var items = try store.fetchAll()
 try store.toggle(items[0])
 try store.delete(items[1])
 
-let containerAfterRestart = try ModelContainer(for: TodoItem.self)
+let containerAfterRestart = try ModelContainer(for: TodoList.self, TodoItem.self)
 let contextAfterRestart = ModelContext(containerAfterRestart)
 let storeAfterRestart = TodoStore(context: contextAfterRestart)
 let persistedItems = try storeAfterRestart.fetchAll()
@@ -193,7 +244,28 @@ print(persistedItems.count)
 - 用 `@Model` 定义哪些对象值得长期保存
 - 用 `ModelContainer` 创建本地持久化容器
 - 用 `ModelContext` 承接当前这次读写
+- 开始看懂一个持久化模型除了标题和状态，还能怎么设计字段和最小关系
 - 用一个很薄的 `TodoStore` 把 CRUD 收口
+
+## 持久化建模不只是“把几个属性列出来”
+
+很多人第一次接触 SwiftData，会把重点全放在：
+
+- `insert`
+- `save`
+- `fetch`
+
+但真实工程里，持久化系统第一步其实不是 CRUD，而是建模。
+
+因为一旦模型设计得含糊，后面所有读写都会跟着变形。当前章先建立一个最小但完整的建模视角：
+
+- 哪些字段属于真正要长期保存的数据
+- 哪些字段只是业务推导，不该直接存
+- 哪些字段适合默认值
+- 哪些字段应该允许为空
+- 关系是不是也应该算模型的一部分
+
+换句话说，这一章除了“会操作数据”，也要开始学习“怎样定义数据”。
 
 ## 三个核心角色：不要背定义，要看它们各自解决什么问题
 
@@ -206,17 +278,23 @@ import SwiftData
 final class TodoItem {
     var title: String
     var isDone: Bool
+    var priority: Int
+    var notes: String?
     var createdAt: Date
     var updatedAt: Date
 
     init(
         title: String,
         isDone: Bool = false,
+        priority: Int = 0,
+        notes: String? = nil,
         createdAt: Date = .now,
         updatedAt: Date = .now
     ) {
         self.title = title
         self.isDone = isDone
+        self.priority = priority
+        self.notes = notes
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
@@ -245,6 +323,217 @@ final class TodoItem {
 - `init(...)`
   - 本章常见形式：`TodoItem(title: "在本地新增一条待办")`
   - 作用：在 `insert` 前创建一条新的本地对象，不是为了 JSON 解码服务
+
+## 一个 `@Model` 里最常见的字段类型到底怎么选
+
+当前 demo 里的 `TodoItem` 故意不再只放两个字段，而是把持久化模型里最常见的几类字段都摆出来：
+
+- `title: String`
+  - 基础文本字段
+- `isDone: Bool`
+  - 基础状态字段
+- `priority: Int`
+  - 适合排序或筛选的简单数值字段
+- `notes: String?`
+  - 可选文本，允许“这条记录可以没有备注”
+- `createdAt: Date`
+  - 创建时间
+- `updatedAt: Date`
+  - 修改时间
+
+这几类字段非常典型，因为它们几乎覆盖了多数本地模型的起手设计。
+
+### 1. 基础字段：`String`、`Bool`、`Int`
+
+这一类字段的判断通常最简单：
+
+- `String`
+  - 适合标题、名称、描述、备注
+- `Bool`
+  - 适合完成状态、开关状态、是否归档
+- `Int`
+  - 适合优先级、数量、顺序、计数
+
+当前 demo 里：
+
+- `title` 用来表达业务内容
+- `isDone` 用来表达任务状态
+- `priority` 用来表达排序优先级
+
+这比只写一个 `title` 更接近真实项目，因为你很快就会遇到“这条记录除了标题还能存什么”的问题。
+
+### 2. 可选字段：什么时候该用 `?`
+
+`notes: String?` 这类字段解决的不是“高级语法问题”，而是业务事实：
+
+- 有些记录本来就允许缺值
+
+如果你把本来允许为空的字段硬写成非可选，通常只会得到两类坏结果：
+
+- 用空字符串伪装“没有值”
+- 到处编造占位值，污染业务判断
+
+所以像备注、补充说明、附件说明这类字段，经常天然就适合做成可选。
+
+### 3. 默认值：什么时候该直接写在模型里
+
+`priority = 0`、`isDone = false`、`createdAt = .now` 这类默认值的意义是：
+
+- 让一条新记录在最常见场景下创建成本更低
+- 让模型自己带着一份稳定的初始状态
+
+当前 demo 里：
+
+- 不传 `priority` 时，默认从 `0` 开始
+- 不传 `notes` 时，默认就是 `nil`
+- 不传 `createdAt` / `updatedAt` 时，默认取当前时间
+
+这能显著减少调用方的样板代码。
+
+### 4. 时间字段：为什么常常成对出现
+
+很多入门示例只放一个 `createdAt`，但真实模型里经常是：
+
+- `createdAt`
+- `updatedAt`
+
+它们服务的是两件不同的事：
+
+- `createdAt`
+  - 这条记录什么时候诞生
+- `updatedAt`
+  - 这条记录最近一次什么时候被修改
+
+这不是“字段多一点更专业”，而是它们对排序、调试、同步、冲突判断都很常见。
+
+## 哪些东西不该直接存进 `@Model`
+
+当你开始会建字段之后，第二个容易踩的坑是：
+
+- 什么都想往模型里塞
+
+这一章先立一个很实用的判断：
+
+- 需要长期保存、以后还要再读出来的数据，才适合直接存
+- 只是在运行时临时算出来的结果，更适合做计算属性
+
+例如：
+
+```swift
+var displayTitle: String {
+    "[P\\(priority)] " + title
+}
+```
+
+这种值很适合在业务层或模型上做计算属性，但通常没必要真的写进持久化字段，因为它完全可以由已有字段稳定推导出来。
+
+再例如：
+
+- “未完成任务数”
+- “展示用组合标题”
+- “按钮颜色”
+
+这类值一般都不该在这一章直接做成存储字段。
+
+## 关系建模也是持久化建模的一部分
+
+关系建模不应该被理解成“只有更后面的主题才需要关心的内容”。它本质上就是持久化建模的一部分。
+
+这一章的 demo 不只停留在单模型，而是把最基础的 `TodoList -> TodoItem` 一对多关系真正跑起来。这里讨论的不是关系声明的表面写法，而是当前章就会直接用到的建模知识。
+
+本章先建立最低认知：
+
+- 持久化模型不一定总是孤立的一张表意对象
+- 很多时候，一条记录会属于另一个记录，或者拥有一组子记录
+
+最常见的一对多形状大致像这样：
+
+```swift
+@Model
+final class TodoList {
+    var name: String
+
+    @Relationship(inverse: \TodoItem.list)
+    var items: [TodoItem] = []
+
+    init(name: String) {
+        self.name = name
+    }
+}
+
+@Model
+final class TodoItem {
+    var title: String
+    var list: TodoList?
+
+    init(title: String, list: TodoList? = nil) {
+        self.title = title
+        self.list = list
+    }
+}
+```
+
+这里你最少要先看懂三件事：
+
+- `TodoList.items`
+  - 父对象持有一组子对象
+- `TodoItem.list`
+  - 子对象知道自己属于哪个父对象
+- `@Relationship(inverse: ...)`
+  - 这不是普通数组属性，而是在告诉 SwiftData：这里存在真正的关系
+
+也就是说，关系建模不是“把另一个对象塞进属性里就完了”，而是：
+
+- 你在定义记录之间如何关联
+- 你在告诉持久化系统：这些对象不是彼此独立的
+
+本章先把关系建模当成“建模视角”的一部分建立起来，而不继续往查询语义和删除语义展开。
+
+## 把最小一对多关系真正跑起来
+
+如果关系建模只停在一段类型声明里，它还是容易被读成“知识点认识”。所以本章 demo 还会做一轮真正的关系落盘验证。
+
+核心代码形状非常简单：
+
+```swift
+let workList = try store.addList(name: "工作")
+let lifeList = try store.addList(name: "生活")
+
+try store.add(
+    title: "整理 Sprint 计划",
+    priority: 3,
+    notes: "演示记录直接归属到某个 TodoList",
+    list: workList
+)
+
+try store.add(
+    title: "预约体检",
+    priority: 2,
+    list: lifeList
+)
+
+try store.add(
+    title: "收集未归类灵感",
+    priority: 1,
+    notes: "演示可选关系：list 可以为空"
+)
+```
+
+这段演示在本章里有三个明确目的：
+
+- 证明关系不是“写了属性就算会了”，而是要真正插入父对象、子对象，并让它们一起进入持久化系统
+- 证明可选关系本身也是建模选择：有些待办天然允许先处于“未归类”状态
+- 证明关系也必须经过“重建容器后再读回”的验证，才能确认不是当前上下文里的内存假象
+
+所以这一章不仅验证：
+
+- 单条记录能不能新增、修改、删除
+
+也同时验证：
+
+- 一对多关系能不能被创建
+- 子对象能不能正确挂到父对象上
+- 重建容器后父子关系还在不在
 
 对应官方文档：
 
@@ -285,7 +574,11 @@ enum TodoStoreBootstrap {
 
     static func makeContainer(at storeURL: URL) throws -> ModelContainer {
         let configuration = ModelConfiguration(url: storeURL)
-        return try ModelContainer(for: TodoItem.self, configurations: configuration)
+        return try ModelContainer(
+            for: TodoList.self,
+            TodoItem.self,
+            configurations: configuration
+        )
     }
 }
 ```
@@ -414,7 +707,11 @@ let configuration = ModelConfiguration(url: storeURL)
 再看这一行：
 
 ```swift
-return try ModelContainer(for: TodoItem.self, configurations: configuration)
+return try ModelContainer(
+    for: TodoList.self,
+    TodoItem.self,
+    configurations: configuration
+)
 ```
 
 按 `Apple Developer` 文档，`ModelContainer` 是“管理应用 schema 和模型存储配置的对象”。这里可以把它理解成：
@@ -425,9 +722,9 @@ return try ModelContainer(for: TodoItem.self, configurations: configuration)
 
 这一行里新出现的点有三个：
 
-- `for: TodoItem.self`
+- `for: TodoList.self, TodoItem.self`
   - 这里传入的是要交给 SwiftData 管理的模型类型。
-  - 如果你后面有多个 `@Model`，这里就会把多个模型类型一起传进去。
+  - 当前章已经不是只有一个模型，而是把列表和待办一起交给容器管理。
 
 - `configurations: configuration`
   - 这里传入的是刚刚构造好的配置对象。
@@ -539,13 +836,36 @@ struct TodoStore {
 
     func fetchAll() throws -> [TodoItem] {
         let descriptor = FetchDescriptor<TodoItem>(
-            sortBy: [SortDescriptor(\TodoItem.createdAt, order: .forward)]
+            sortBy: [
+                SortDescriptor(\TodoItem.priority, order: .reverse),
+                SortDescriptor(\TodoItem.createdAt, order: .forward)
+            ]
         )
         return try context.fetch(descriptor)
     }
 
-    func add(title: String) throws {
-        let item = TodoItem(title: title)
+    func fetchLists() throws -> [TodoList] {
+        let descriptor = FetchDescriptor<TodoList>(
+            sortBy: [SortDescriptor(\TodoList.name, order: .forward)]
+        )
+        return try context.fetch(descriptor)
+    }
+
+    @discardableResult
+    func addList(name: String) throws -> TodoList {
+        let list = TodoList(name: name)
+        context.insert(list)
+        try context.save()
+        return list
+    }
+
+    func add(
+        title: String,
+        priority: Int = 0,
+        notes: String? = nil,
+        list: TodoList? = nil
+    ) throws {
+        let item = TodoItem(title: title, priority: priority, notes: notes, list: list)
         context.insert(item)
         try context.save()
     }
@@ -575,9 +895,18 @@ struct TodoStore {
 
 - 它解决的问题：把排序规则写成可组合的描述，而不是查出来后再临时排序。
 - 本章常用成员：排序键路径、`order`
-- 当前代码里怎么理解：这里它负责保证待办按 `createdAt` 有稳定顺序。
+- 当前代码里怎么理解：这里它先按 `priority` 排主要顺序，再用 `createdAt` 保证同优先级时仍然稳定。
 
 这个类型不是 SwiftData 强制要求的。它只是一个很薄的“存储入口”，方便把读取和写入动作收口。
+
+这里也可以顺手看懂一个工程上的选择：
+
+- `fetchAll()` 负责收口“把全部待办按稳定顺序读回来”
+- `fetchLists()` 负责收口“把父对象列表本身读回来”
+- `addList(name:)` 负责创建父对象
+- `add(..., list:)` 负责在创建子对象时决定是否挂到某个父对象上
+
+这几个动作放在一起，当前章就不只是“单条记录 CRUD”，而是已经开始覆盖最基础的本地关系建模。
 
 ### 1. 读取全部待办
 
@@ -587,7 +916,10 @@ struct TodoStore {
 
     func fetchAll() throws -> [TodoItem] {
         let descriptor = FetchDescriptor<TodoItem>(
-            sortBy: [SortDescriptor(\TodoItem.createdAt, order: .forward)]
+            sortBy: [
+                SortDescriptor(\TodoItem.priority, order: .reverse),
+                SortDescriptor(\TodoItem.createdAt, order: .forward)
+            ]
         )
         return try context.fetch(descriptor)
     }
@@ -598,7 +930,7 @@ struct TodoStore {
 
 - 应用启动后，我怎么把当前本地已有的待办全部拿回来
 
-这段代码的作用是读取当前 `TodoStore` 关联上下文中的全部待办，并按创建时间升序返回。
+这段代码的作用是读取当前 `TodoStore` 关联上下文中的全部待办，并按“优先级倒序 + 创建时间升序”稳定返回。
 
 如果只看结果，在实际工程中很容易变成“照着抄”。这里把每一行拆开：
 
@@ -626,13 +958,12 @@ struct TodoStore {
   - `FetchDescriptor<TodoItem>` 的意思不是“立刻去查”，而是先把“我要查什么类型、怎么查”描述出来。
   - 这里的目标类型是 `TodoItem`，也就是告诉 SwiftData：这次查询面对的是待办模型。
 
-- `sortBy: [SortDescriptor(\\TodoItem.createdAt, order: .forward)]`
+- `sortBy: [SortDescriptor(...), SortDescriptor(...)]`
   - 这一行决定返回结果的顺序。
-  - `SortDescriptor` 可以理解成“排序规则”。
-  - `\\TodoItem.createdAt` 表示按 `TodoItem` 的 `createdAt` 字段排序。
-  - `order: .forward` 表示从小到大，也就是时间从早到晚。
-  - 这里特意把排序写进查询，而不是读出来以后再临时排序，是为了让读取规则稳定、明确、可重复。
-  - 如果这里不写排序，列表顺序就可能依赖底层存储当前返回的顺序，读者会误以为“SwiftData 自带稳定顺序”，这在教学上是危险的。
+  - 第一个 `SortDescriptor` 按 `priority` 倒序，表示优先级高的任务排前面。
+  - 第二个 `SortDescriptor` 按 `createdAt` 正序，表示同优先级时更早创建的任务排前面。
+  - 这里特意把双重排序写进查询，而不是读出来以后再临时排序，是为了让读取规则稳定、明确、可重复。
+  - 如果只写一个排序键，列表一旦出现并列值，顺序就可能看起来不稳定。
 
 - `)`
   - 到这里，查询描述对象构造完成。
@@ -661,8 +992,13 @@ struct TodoStore {
 ### 2. 新增一条待办
 
 ```swift
-func add(title: String) throws {
-    let item = TodoItem(title: title)
+func add(
+    title: String,
+    priority: Int = 0,
+    notes: String? = nil,
+    list: TodoList? = nil
+) throws {
+    let item = TodoItem(title: title, priority: priority, notes: notes, list: list)
     context.insert(item)
     try context.save()
 }
@@ -673,9 +1009,12 @@ func add(title: String) throws {
 - 你不再需要把整份列表读出来、追加、再整体写回文件
 - 你是在对一条记录执行插入动作
 
-这里只补一个参数说明：
+这里只补四个参数说明：
 
 - `title`：新待办标题
+- `priority`：持久化优先级字段，默认从 `0` 开始
+- `notes`：可选备注字段，没有就保持 `nil`
+- `list`：可选父对象；传入时表示这条待办会归属到某个列表，不传时表示它暂时未归类
 
 这段代码的作用是创建一条新的本地待办并保存。
 
@@ -689,6 +1028,13 @@ func add(title: String) throws {
 - 先创建对象
 - 再把它放进 `ModelContext`
 - 最后显式保存
+
+如果当前记录需要直接归属到某个父对象，那么这一步也会一起完成关系建立：
+
+- `list: workList`
+  - 表示这条记录在创建时就属于 `workList`
+- `list: nil`
+  - 表示它先作为未归类记录存在
 
 ### 3. 修改一条待办
 
@@ -748,7 +1094,7 @@ func delete(_ item: TodoItem) throws {
 
 这也是为什么进入 SwiftData 后，操作粒度已经从“整份文件”升级到了“单条模型”。
 
-## 现在回头看：这两轮验证各自在确认什么
+## 现在回头看：这三轮验证各自在确认什么
 
 到这里再回头看开头那段完整骨架，顺序就更自然了。
 
@@ -756,8 +1102,12 @@ func delete(_ item: TodoItem) throws {
   - 它在验证“本地记录能不能像对象一样被管理”
   - 也就是验证 `ModelContext + save()` 这条最小 CRUD 链路有没有跑通
 
+- 第 1.5 轮：在同一个容器里建立 `TodoList -> TodoItem` 关系
+  - 它在验证“关系是不是也能作为持久化模型的一部分被保存下来”
+  - 也就是验证父对象、子对象、可选关系三种建模选择都能进入当前 store
+
 - 第 2 轮：用同一个 `storeURL` 重建 `ModelContainer` 和 `ModelContext`
-  - 它在验证“这些变更有没有真的落盘”
+  - 它在验证“这些变更和关系有没有真的落盘”
   - 也就是验证你前面调用的 `save()` 有没有把数据真正写进底层 store，而不是只留在当前进程内存里
 
 ## 为什么“重建容器再读回”这么重要
@@ -799,8 +1149,11 @@ func delete(_ item: TodoItem) throws {
 
 - store 文件放在哪里
 - 第一次插入后有哪些待办
+- 默认值、可选字段、优先级字段是如何落进模型的
+- `TodoList` 和 `TodoItem` 的一对多关系是怎样建立出来的
+- 哪些待办归属于某个列表，哪些待办保持未归类
 - 修改和删除后，列表结果如何变化
-- 重建容器后，哪些数据被成功保留下来
+- 重建容器后，哪些数据和父子关系被成功保留下来
 
 你在终端里看到的每一轮输出，应该都能回答一个问题：
 
@@ -821,46 +1174,13 @@ func delete(_ item: TodoItem) throws {
 3. 再看 fetch 结果是否符合当前 context 内的变更
 4. 最后重建容器，再读一遍确认数据真的落盘
 
-## 本章的边界：为什么只会 CRUD 还不够
-
-到这里，你已经能把待办项当作本地记录来维护了。但真实项目很快会继续提出新问题：
-
-- 我只想读未完成的待办怎么办
-- 我想按优先级和创建时间排序怎么办
-- 我想让待办属于某个列表怎么办
-- 删除一个列表时，里面的待办怎么办
-
-这些都不是“再多写几个 CRUD 函数”就能自然解决的问题。
-
-因为一旦数据开始增长，你面对的重点就不再只是“有没有保存成功”，而是：
-
-- 怎么读才合理
-- 怎么排序才稳定
-- 关系怎么建才不会把删除逻辑写乱
-
-这正是本章边界开始出现的地方。
-
-## 从“会 CRUD”到“会管理读取与关系”
-
-如果继续沿用待办场景，并把结构升级为：
-
-- 待办项属于某个待办列表 `TodoList`
-- 你需要只读某个列表下未完成的待办
-- 你需要稳定排序，而不是把全部数据读出来后随手排序
-- 你需要提前决定：删掉列表时，列表里的待办是跟着删，还是回到“未归类”
-
-这时你会看到：
-
-- 只会 CRUD 还不够
-- 当记录开始增长，读取规则、排序和删除影响都会变成新的重点
-
 ## 边界说明
 
 为了让入门阶段保持清楚，本章明确不做这些事：
 
 - 不讲界面层集成方式，例如容器注入、查询绑定和界面刷新联动
-- 不讲关系建模与删除规则
-- 不讲复杂筛选和排序
+- 不展开复杂筛选表达式和大规模查询优化
+- 不展开关系删除语义和同步冲突
 - 不讲迁移、同步、性能优化、多上下文协同
 
 这些并非不重要，而是它们会把主题冲散，且当前的前置知识不足以支撑。

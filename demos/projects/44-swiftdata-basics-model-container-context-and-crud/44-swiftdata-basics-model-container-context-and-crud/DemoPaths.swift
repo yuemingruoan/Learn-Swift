@@ -34,6 +34,10 @@ enum DemoPaths {
 
     static func makeContainer(storeURL: URL) throws -> ModelContainer {
         let configuration = ModelConfiguration(url: storeURL)
-        return try ModelContainer(for: TodoItem.self, configurations: configuration)
+        return try ModelContainer(
+            for: TodoList.self,
+            TodoItem.self,
+            configurations: configuration
+        )
     }
 }

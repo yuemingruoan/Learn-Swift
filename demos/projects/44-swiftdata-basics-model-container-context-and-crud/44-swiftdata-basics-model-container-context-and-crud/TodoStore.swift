@@ -6,13 +6,36 @@ struct TodoStore {
 
     func fetchAll() throws -> [TodoItem] {
         let descriptor = FetchDescriptor<TodoItem>(
-            sortBy: [SortDescriptor(\TodoItem.createdAt, order: .forward)]
+            sortBy: [
+                SortDescriptor(\TodoItem.priority, order: .reverse),
+                SortDescriptor(\TodoItem.createdAt, order: .forward)
+            ]
         )
         return try context.fetch(descriptor)
     }
 
-    func add(title: String) throws {
-        let item = TodoItem(title: title)
+    func fetchLists() throws -> [TodoList] {
+        let descriptor = FetchDescriptor<TodoList>(
+            sortBy: [SortDescriptor(\TodoList.name, order: .forward)]
+        )
+        return try context.fetch(descriptor)
+    }
+
+    @discardableResult
+    func addList(name: String) throws -> TodoList {
+        let list = TodoList(name: name)
+        context.insert(list)
+        try context.save()
+        return list
+    }
+
+    func add(
+        title: String,
+        priority: Int = 0,
+        notes: String? = nil,
+        list: TodoList? = nil
+    ) throws {
+        let item = TodoItem(title: title, priority: priority, notes: notes, list: list)
         context.insert(item)
         try context.save()
     }

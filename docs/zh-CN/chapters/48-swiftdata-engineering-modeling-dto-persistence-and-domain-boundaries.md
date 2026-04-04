@@ -143,6 +143,22 @@ enum CodingKeys: String, CodingKey {
 
 - 把远程字段可靠地接进来
 
+这里可以顺手掌握两个API：
+
+- `Decodable`
+  - 解决的问题：让一个类型可以从外部 JSON 恢复出来。
+  - 当前章落点：`StudyPlanDTO`、`StudyTaskDTO`、`OwnerDTO` 都首先在服务“解码成功”这件事。
+
+- `CodingKeys`
+  - 解决的问题：当远程字段名和 Swift 命名不一致时，提供稳定映射。
+  - 当前章常用形状：`case planID = "plan_id"`
+  - 当前章落点：DTO 继续贴近接口字段，但不必牺牲 Swift 代码里的命名可读性。
+
+所以 `CodingKeys` 并不是“只在复杂 JSON 才会用”，而是在工程里非常常见的一条边界工具：
+
+- JSON 继续保持后端字段名
+- Swift 代码继续保持本地可读命名
+
 ## 第二层：SwiftData Record 只服从本地存储与关系维护
 
 持久化层文件长这样：
@@ -174,6 +190,23 @@ final class StudyPlanRecord {
 
 - 让本地记录稳定保存
 - 让关系和生命周期被持久化层理解
+
+这里可以直接把字段再分成三类：
+
+- 远程字段翻译过来的持久化字段
+  - 例如 `remoteID`、`title`、`publishedAt`
+- 本地存储自己需要的字段
+  - 例如 `syncedAt`、`sortOrder`
+- 关系字段
+  - 例如 `tasks`、`plan`
+
+这三类字段混在一个 `@Model` 里并不奇怪，因为它们都在共同服务“本地怎么存”这件事。
+
+`@Relationship`
+
+- 它解决的问题：让父子记录之间的关系、删除语义、反向关联都能被持久化层理解。
+- 本章常用形状：`@Relationship(deleteRule: .cascade, inverse: \StudyTaskRecord.plan)`
+- 当前章落点：`StudyPlanRecord` 和 `StudyTaskRecord` 不再只是两个碰巧互相持有数组/可选属性的类，而是真正的持久化关系。
 
 所以本章一定要明确一个判断：
 
@@ -223,6 +256,21 @@ struct StudyPlan {
 - Record 不该带着你所有持久化细节到处跑
 - Domain 也不该被数据库和接口细节污染
 
+领域模型里需要留意的，不只是字段变少了，而是它开始出现业务推导值。例如 demo 里的：
+
+- `unfinishedTaskCount`
+- `totalEstimatedMinutes`
+- `completionSummary`
+- `recommendedFocusTitle`
+
+这些属性的共同点是：
+
+- 它们不属于远程 JSON 原始字段
+- 它们也不一定要落到本地存储
+- 但它们非常适合在业务层直接消费
+
+这就是“领域推导属性”在工程里的典型位置。
+
 所以本章第二个必须建立的判断是：
 
 - **不要把 `@Model` 直接当成全工程通用业务模型**
@@ -268,6 +316,14 @@ static func makeRecord(from dto: StudyPlanDTO, syncedAt: Date = .now) -> StudyPl
 
 - **把“远程世界的外形”翻译成“本地存储世界的外形”**
 
+`StudyPlanMapper.makeRecord(from:syncedAt:)`
+
+- 解决的问题：把同步入口集中起来，避免 `main.swift` 或 repository 到处手写字段转换。
+- 当前常见形式：`makeRecord(from: dto, syncedAt: .now)`
+- 作用：一旦第二次同步来了，替换逻辑和字段映射仍然只需要改这一层。
+
+这一点在工程里非常重要，因为“同步时怎么映射”通常比“第一次保存成功”更容易失控。
+
 ## `Record -> Domain` 映射：业务读取时到底做什么
 
 即使数据已经成功保存了，业务层显然也不会想直接拿 `StudyPlanRecord` 来用。
@@ -298,6 +354,13 @@ static func makeDomainPlan(from record: StudyPlanRecord) -> StudyPlan {
 所以 `Record -> Domain` 映射解决的是：
 
 - **把“数据库里可保存的结构”翻译成“业务里可直接使用的结构”**
+
+这里也顺手带出了另一个高频 API：
+
+- `FetchDescriptor`
+  - 解决的问题：把“本地要读哪些 Record、按什么顺序读”集中写成查询描述。
+  - 当前常见形状：`FetchDescriptor<StudyPlanRecord>(sortBy: [...])`
+  - 作用：repository 先把 `Record` 稳定读出来，再交给 mapper 转成 `Domain`。
 
 ## 为什么一对多关系在 DTO 和 SwiftData 里看起来像，但职责不同
 
@@ -378,6 +441,19 @@ struct StudyPlanStore {
 - 让 `main.swift` 不去关心映射和查询细节
 - 让“把 DTO 同步到本地”和“把本地读成领域模型”这两条主线更清晰
 
+其中 `replaceStoredPlan(with:)` 这个名字也故意取得很具体，因为它在提醒你：
+
+- 第二次同步不是“再插入一份就好”
+- 而是要先明确覆盖、替换、删除旧记录的语义
+
+当前 demo 的选择是：
+
+- 先取出已有 `StudyPlanRecord`
+- 删除旧记录
+- 再插入新的映射结果
+
+这就是一个非常典型的“同步策略是工程决策，不只是 save 成功”的例子。
+
 ## 哪些小项目可以先只保留两层
 
 虽然这一章讲的是三层模型，但并不是说任何小项目都必须立刻上三层。
@@ -408,6 +484,8 @@ struct StudyPlanStore {
 2. DTO 到 Record 的映射集中在 `StudyPlanMapper`，而不是散落在 `main.swift`。
 3. 重建 `ModelContainer` 后还能读回 Record，说明这不是内存假象。
 4. 最终业务输出读的是 `StudyPlan`，而不是把 `StudyPlanRecord` 直接拿去全流程乱用。
+5. 第二次同步会触发替换语义，而不是简单追加旧记录。
+6. 领域层会打印 `completionSummary`、`recommendedFocusTitle` 这类推导值，证明业务表达已经和持久化细节分开。
 
 如果你能回答下面这三个问题，这章就读通了：
 

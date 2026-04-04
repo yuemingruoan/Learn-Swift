@@ -22,6 +22,7 @@ enum AppPaths {
 func saveSnapshot<T: Encodable>(_ value: T, to fileURL: URL) throws {
     do {
         let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(value)
         try data.write(to: fileURL, options: [.atomic])
@@ -39,7 +40,9 @@ func loadSnapshot<T: Decodable>(_ type: T.Type, from fileURL: URL) throws -> T? 
         }
 
         let data = try Data(contentsOf: fileURL)
-        return try JSONDecoder().decode(T.self, from: data)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(T.self, from: data)
     } catch let error as DecodingError {
         throw CacheReadError.decodeFailed(underlying: error)
     } catch {

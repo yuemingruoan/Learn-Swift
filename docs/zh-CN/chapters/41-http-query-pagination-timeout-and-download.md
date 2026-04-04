@@ -235,6 +235,12 @@ struct PageDTO<Item: Decodable>: Decodable {
 }
 ```
 
+`PageDTO<Item>`
+
+- 它解决的问题：把“列表数据”和“分页元信息”作为一个整体解码，而不是只拿到 `[Item]` 后把页码、总数丢掉。
+- 本章常用成员：`items`、`page`、`limit`、`total`、`nextCursor`、`hasMore`
+- 当前代码里怎么理解：`PageDTO<TodoDTO>` 仍然走第 39 章的 `Decodable` 主线，只是 `T` 从 `TodoDTO` 变成了“一个分页容器”。
+
 这里的 `Item: Decodable` 和第 39 章的 `T: Decodable` 是一回事：
 
 - `Item` 仍然是未知类型
@@ -322,6 +328,14 @@ request.timeoutInterval = 10 // 秒
 - 你不再只是“拿着 URL 发请求”
 - 你需要用 `URLRequest` 把 method、headers、timeout 等信息描述完整
 
+如果你已经把 `Endpoint` 转成 `URLRequest`，这一章更值得记住的其实是 `URLSession.data(for:)` 仍然没变：
+
+- `data(for:)` 负责发送请求并返回 `(Data, URLResponse)`
+- `timeoutInterval` 负责影响这次发送在 transport 层等待多久
+- 这两个 API 是同一条链路上的前后配合，不是互相替代
+
+所以“设置超时”这件事不需要你换一套发送 API；通常只是在发请求前，把 `URLRequest` 描述补完整。
+
 如果你已经有 `Endpoint -> URLRequest` 的构建流程，那么一个可控的做法是：
 
 - 让 `Endpoint` 增加一个可选字段，例如 `timeout: TimeInterval?`
@@ -352,6 +366,27 @@ request.timeoutInterval = 10 // 秒
 - `Content-Disposition`
   - 有时会包含建议的文件名（例如 `attachment; filename="report.pdf"`）
   - 客户端可以把它当作“默认保存名”，但仍要做好缺失/非法的兜底
+
+`HTTPURLResponse.value(forHTTPHeaderField:)`
+
+- 参数：
+  - Header 名称，例如 `"Content-Type"`、`"Content-Disposition"`
+- 返回值：
+  - 可选字符串
+- 作用：
+  - 读取响应头里的原始信息，给下载路径做内容类型识别或文件名推断
+
+真实工程里经常会采用两步策略：
+
+1. 先尝试从 `Content-Disposition` 解析 `filename=...`
+2. 如果没有，再退回 `response.suggestedFilename`
+
+这是因为：
+
+- `Content-Disposition` 更接近服务端显式声明
+- `suggestedFilename` 更像系统给的兜底推断，可能来自 header，也可能来自 URL 最后一段路径
+
+所以你在 demo 里会看到 `DownloadClient.swift` 先读 header，再用系统建议文件名兜底。
 
 注意：本章只做“识别与读取”，不在这里实现完整的“从 header 推导文件名 + 落盘保存”的流程；那属于第 `42` 章的文件系统内容。
 
@@ -399,6 +434,19 @@ let contentType = http.value(forHTTPHeaderField: "Content-Type")
 print("Downloaded to temp file:", tempFileURL)
 print("Content-Type:", contentType ?? "<none>")
 ```
+
+这里再顺手补一个非常实用的成员：
+
+`suggestedFilename`
+
+- 所属类型：
+  - `URLResponse`
+- 返回值：
+  - 可选字符串
+- 作用：
+  - 当你想给下载结果找一个默认文件名时，作为 `Content-Disposition` 解析失败后的兜底来源
+
+它很适合放在下载分支里，而不适合放进 JSON 主线。原因很简单：只有下载这条路径真正关心“这份二进制内容接下来可能要以什么名字保存”。
 
 `download(for:delegate:)`
 

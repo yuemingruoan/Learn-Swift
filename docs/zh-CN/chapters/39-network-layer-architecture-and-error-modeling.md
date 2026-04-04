@@ -293,6 +293,22 @@ extension Endpoint {
 - 本章常用成员：`init(url:)`、`httpMethod`、`httpBody`、`setValue(_:forHTTPHeaderField:)`
 - 当前代码里怎么理解：这就是后面 `URLSession` 真正接收的输入。
 
+`URLRequest.init(url:)`
+
+- 参数：
+  - 一个已经构造完成的 `URL`
+- 返回值：
+  - 一个最小可发送的 `URLRequest`
+- 作用：
+  - 先拿到一个“请求壳子”，再逐步补上 `httpMethod`、`headers`、`httpBody`
+
+很多初学者第一次看到 `var request = URLRequest(url: url)` 时会觉得它只是样板代码。其实它的意义很明确：
+
+- `URL` 只表达地址
+- `URLRequest` 才开始表达“怎么发”
+
+也正因为如此，本章里 `Endpoint.makeRequest(baseURL:)` 的职责不是“顺手 new 一个请求对象”，而是把路径、query、header、body 全部落到这个系统请求对象上。
+
 `JSONEncoder.encode(_:)`
 
 - 参数：
@@ -546,6 +562,20 @@ enum NetworkError: Error { case requestFailed }
 
 这些错误信息能够帮你避免“只能猜哪里错了”这样的尴尬境界
 
+这里的两个字段都很工程化，值得顺手记住：
+
+- `underlying`
+  - 解决的问题：不要把系统底层错误信息吃掉。
+  - 最常见形状：`transportFailed(underlying: error)`、`decodingFailed(underlying: error, body: data)`
+  - 当前章落点：让调用方后续还能继续识别 `URLError`、`DecodingError` 这些真实错误。
+
+- `body`
+  - 解决的问题：服务端报错时，状态码之外往往还有一段正文；解码失败时，原始响应体也常常是排错关键。
+  - 最常见形状：`badStatusCode(code: httpResponse.statusCode, body: data)`
+  - 当前章落点：在 `main.swift` 或日志层打印 `body` 的前几十个字节，比只看到一个 `500` 更有诊断价值。
+
+也就是说，本章错误建模不是只为了 `switch` 写得好看，而是为了保留排查现场。
+
 ## 模块 6：完整示例串联：调用方应该变短
 
 当你有了 `Endpoint` 和 `NetworkClient` 后，调用方理想上只需要做两件事：
@@ -589,6 +619,27 @@ do {
 ```
 
 这就是“错误建模”的直接收益：失败路径不再是一个黑盒。
+
+## 哪些逻辑现在还不该塞进 `NetworkClient`
+
+当你第一次把网络层收口成功，很容易产生第二个冲动：
+
+- 那我干脆把鉴权、分页、缓存、业务提示、重试都一起塞进去吧
+
+这个阶段先不要这么做。`NetworkClient` 最适合稳定承接的是这些共性动作：
+
+- `URLSession.data(for:)` 发送请求
+- `HTTPURLResponse` 检查响应是不是 HTTP
+- `statusCode` 检查 2xx / 非 2xx
+- `JSONDecoder.decode` 统一解码
+- 把失败映射成统一 `NetworkError`
+
+而下面这些，更适合继续留在别的层，或放到后续章节单独展开：
+
+- token / cookie 注入：第 40 章的鉴权层
+- query / timeout / download：第 41 章在 `Endpoint` 或下载分支里补
+- 缓存与落盘：第 43 章之后再讲
+- “401 提示重新登录”“404 弹某条文案”这类业务反馈：调用方或更外层服务决定
 
 ## 常见误区
 

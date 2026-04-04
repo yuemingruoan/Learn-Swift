@@ -199,6 +199,7 @@ struct StudyPlan {
 
 - `StudyPlan` 和 `StudyTask` 已经不在 `main.swift` 里
 - `tasks` 用了 `private(set)`，表示外部能读，但不能随手改写
+- `init(title:tasks:)` 被保留成公开可调用的默认构造入口，用来保证跨文件仍然能稳定创建领域对象
 
 这一点非常适合用来理解访问控制的第一层直觉：
 
@@ -208,6 +209,17 @@ struct StudyPlan {
 
 - **访问级别不是为了显得高级**
 - **访问级别是在保护你的边界**
+
+如果把这个点再拆细一点，可以直接得到四条最常用经验：
+
+- `internal`
+  - 默认可见性；同一个 target / module 内通常都能访问。
+- `private`
+  - 把成员收缩到当前声明作用域里，最适合保护内部实现细节。
+- `fileprivate`
+  - 比 `private` 稍宽，允许同文件内的其他声明协作，但不会放宽到别的文件。
+- `private(set)`
+  - 最适合“外部能看，内部才能改”的属性边界。
 
 ## 2. 仓储层：把“数据从哪里来”单独收口
 
@@ -272,6 +284,18 @@ struct StudyPlanService {
 - **仓储负责数据入口**
 - **服务负责业务动作**
 
+demo 里之所以把 `repository` 写成：
+
+```swift
+private let repository: StudyPlanRepository
+```
+
+目的也很明确：
+
+- 外部不应该绕过服务层直接动这个依赖
+- 服务层自己知道该怎么用仓储
+- 但不应该把这个存储细节继续暴露给别的文件
+
 ## 4. 输出层：把控制台打印也变成独立职责
 
 如果输出逻辑还继续写在 `main.swift`，你很快会重新回到单文件混乱。
@@ -323,6 +347,18 @@ print(renderer.renderPlan(initialPlan, headline: "当前学习计划"))
 - 触发
 - 演示
 
+当前 demo 里还进一步往前走了一步：真正的依赖组装放进了 `AppBootstrap.swift`。
+
+这让 `main.swift` 更接近纯入口，而 `AppBootstrap` 更像“当前控制台工程的装配点”：
+
+- `main.swift` 负责启动
+- `AppBootstrap.makeApp()` 负责把仓储、服务、渲染器接起来
+
+这种写法不复杂，但它能非常直观地提醒你：
+
+- 入口不一定等于组装细节所在地
+- 组装也可以被收口成一个独立职责
+
 ## 同一 target 内跨文件可见性的基本规则
 
 现在回到最开始那个问题：
@@ -363,6 +399,32 @@ print(renderer.renderPlan(initialPlan, headline: "当前学习计划"))
 - 是否处在同一个 target
 - 访问级别是否允许
 
+这里再补一个经常被混淆的最低认知：
+
+- `.swift` 文件只是源代码文件
+- target 是一次编译产物的组成单位
+- module 是这批代码被编译后对外呈现的名字
+
+在本章这种单 target 控制台 demo 里，你可以先把它理解成：
+
+- 同一个 target 里的文件，默认都属于同一个 module
+- 所以“跨文件能不能访问”首先看访问级别，而不是先看文件名
+
+这就是为什么把 `StudyPlan` 放进 [StudyPlan.swift](/Users/shiyu/Documents/Project/Learn-Swift/demos/projects/47-multi-file-project-organization-and-cross-file-collaboration/47-multi-file-project-organization-and-cross-file-collaboration/StudyPlan.swift) 后，[AppBootstrap.swift](/Users/shiyu/Documents/Project/Learn-Swift/demos/projects/47-multi-file-project-organization-and-cross-file-collaboration/47-multi-file-project-organization-and-cross-file-collaboration/AppBootstrap.swift) 依然可以直接创建它。
+
+## 错误拆分方式：不是文件一多就算工程化
+
+本章 demo 里专门留了一个 [BadSplitExample.swift](/Users/shiyu/Documents/Project/Learn-Swift/demos/projects/47-multi-file-project-organization-and-cross-file-collaboration/47-multi-file-project-organization-and-cross-file-collaboration/BadSplitExample.swift)，就是为了说明“拆成多个文件”本身不等于拆对了。
+
+里面几个典型反例分别对应三种常见误区：
+
+- 按“谁都方便访问”拆
+  - 结果是全局共享状态到处流动，文件只是把混乱摊薄了。
+- 把输出逻辑塞回 service
+  - 结果是业务层和展示层重新耦合，文件分开了，职责却没分开。
+- `main.swift` 继续保留全部细节
+  - 结果是入口文件只是变短了一点，本质上仍然是单文件心智。
+
 ## 为什么这章强调“依赖流动”，而不是“文件拥有文件”
 
 看完 demo 后，你应该能更自然地描述依赖关系：
@@ -395,6 +457,8 @@ print(renderer.renderPlan(initialPlan, headline: "当前学习计划"))
 3. 仓储协议和仓储实现被收口到一起，服务层只依赖协议能力。
 4. 输出层和业务层分开后，主流程变得更容易读。
 5. `private(set)` 让读取和写入边界变得更清楚。
+6. `AppBootstrap.swift` 让组装职责继续从 `main.swift` 中退出。
+7. `BadSplitExample.swift` 明确展示了“看似拆文件，实际仍然混乱”的反例。
 
 如果你读完这一章，能自己把一个上百行的单文件程序拆成“模型 + 仓储 + 服务 + 输出 + 入口”这几层，本章目标就达到了。
 

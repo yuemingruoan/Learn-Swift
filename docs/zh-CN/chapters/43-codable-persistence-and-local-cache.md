@@ -110,6 +110,12 @@ struct TodoDTO: Decodable {
 
 DTO 的第一职责是“把接口返回解出来”。它的结构首先服从后端，不一定适合直接落盘，更不一定适合直接拿来做业务。
 
+`Decodable`
+
+- 它解决的问题：让一个 Swift 类型能够从外部数据格式恢复出来。
+- 本章最常用形状：`struct TodoDTO: Decodable`
+- 当前章落点：远程返回先进入 DTO，所以这里优先要求“能解码”，而不是“能再编码回去”。
+
 ### 2. 本地快照：服从当前应用要保存什么
 
 ```swift
@@ -132,6 +138,15 @@ struct TodoSnapshot: Codable, Equatable {
 - 它可以更贴近当前应用的表达方式
 - 它不必和接口 DTO 一模一样
 
+`Encodable` / `Codable`
+
+- `Encodable`
+  - 解决的问题：把 Swift 值重新编码成外部格式。
+  - 本章落点：快照要写进文件，所以至少要能编码。
+- `Codable`
+  - 解决的问题：同时拥有 `Encodable + Decodable` 两种能力。
+  - 本章落点：`TodoSnapshot` 既要保存，也要读回，所以直接写成 `Codable` 最省心。
+
 ### 3. 缓存外壳：服从缓存文件需要哪些元信息
 
 ```swift
@@ -146,6 +161,16 @@ struct CacheEnvelope<Value: Codable>: Codable {
 - 写入时间
 - 版本号
 - 来源
+
+这里的 `CacheEnvelope<Value: Codable>` 还有一个很实用的工程意义：
+
+- `Value` 让这层包装可以复用在不同缓存内容上
+- `cachedAt` 之类的元信息被固定留在外壳层，而不是污染 `TodoSnapshot`
+
+所以它不是“多套一层泛型显得高级”，而是在明确区分：
+
+- 真正的业务数据
+- 缓存系统自己需要的附加信息
 
 本章只用 `cachedAt`，已经够说明快照文件本身也是你定义的格式。
 
@@ -242,6 +267,7 @@ enum CacheWriteError: Error {
 func saveSnapshot<T: Encodable>(_ value: T, to fileURL: URL) throws {
     do {
         let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(value)
         try data.write(to: fileURL, options: [.atomic])
@@ -270,6 +296,18 @@ func saveSnapshot<T: Encodable>(_ value: T, to fileURL: URL) throws {
 
 这里打开 `.prettyPrinted` 和 `.sortedKeys`，是为了让教学阶段更容易直接打开文件看内容，而不是为了性能。
 
+这里还顺手用到了两个工程里很常见的成员：
+
+- `dateEncodingStrategy`
+  - 解决的问题：当值里包含 `Date` 时，决定日期被编码成什么样。
+  - 本章常用形状：`encoder.dateEncodingStrategy = .iso8601`
+  - 当前章落点：`CacheEnvelope.cachedAt` 是 `Date`，如果你希望缓存文件更可读、也更方便和远程时间格式对齐，`iso8601` 很常见。
+
+- `Data.write(to:options:)` 的 `.atomic`
+  - 解决的问题：尽量避免写文件写到一半就留下半截坏 JSON。
+  - 本章常用形状：`try data.write(to: fileURL, options: [.atomic])`
+  - 当前章落点：快照文件一般是整个覆盖写入，所以原子写入通常很值得开。
+
 这里真正需要看的参数有两个：
 
 - `value`：要保存的数据，要求遵守 `Encodable`
@@ -294,7 +332,9 @@ func loadSnapshot<T: Decodable>(_ type: T.Type, from fileURL: URL) throws -> T? 
         }
 
         let data = try Data(contentsOf: fileURL)
-        return try JSONDecoder().decode(T.self, from: data)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(T.self, from: data)
     } catch let error as DecodingError {
         throw CacheReadError.decodeFailed(underlying: error)
     } catch {
@@ -330,6 +370,13 @@ func loadSnapshot<T: Decodable>(_ type: T.Type, from fileURL: URL) throws -> T? 
 - `fileURL`：缓存文件位置
 
 这段代码的作用是把“有没有缓存”和“缓存能不能读”清楚地区分开。
+
+如果你的缓存内容里有 `Date`，就要让读和写的策略成对出现：
+
+- 写时 `dateEncodingStrategy`
+- 读时 `dateDecodingStrategy`
+
+这也是为什么真实工程里常常会把 `JSONEncoder` / `JSONDecoder` 的配置集中到一个地方，而不是每次临时 new 一个完全默认的实例。
 
 实际开发里，这两个状态的处理完全不同，不能混成一句“读取失败”。
 

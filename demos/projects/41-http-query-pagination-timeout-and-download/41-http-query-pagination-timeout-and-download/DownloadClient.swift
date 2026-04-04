@@ -47,6 +47,7 @@ struct DownloadClient {
 
         let suggestedFilename = httpResponse.value(forHTTPHeaderField: "Content-Disposition")
             .flatMap(parseSuggestedFilename(from:))
+            ?? response.suggestedFilename
 
         return DownloadedFile(
             temporaryFileURL: temporaryFileURL,

@@ -236,6 +236,16 @@ final class TodoItem {
 
 - 如果某类数据需要长期保存、频繁修改、后续还可能被筛选和排序，它就很可能值得建成 `@Model`
 
+这里再顺手补两个很常用的细节：
+
+- `final class`
+  - 本章常见形式：`@Model final class TodoItem`
+  - 作用：SwiftData 的持久化模型在教程里统一用引用类型，强调“这是一条可被上下文跟踪的本地记录”。
+
+- `init(...)`
+  - 本章常见形式：`TodoItem(title: "在本地新增一条待办")`
+  - 作用：在 `insert` 前创建一条新的本地对象，不是为了 JSON 解码服务
+
 对应官方文档：
 
 - [`@Model` / SwiftData 概览相关入口（Apple Developer）](https://developer.apple.com/documentation/swiftdata)
@@ -495,6 +505,20 @@ let contextAfterRestart = ModelContext(containerAfterRestart)
 - `delete(_:)`
 - `save()`
 
+这四个 API 最好按“职责顺序”记：
+
+- `insert(_:)`
+  - 解决的问题：把新建对象登记进当前上下文。
+  - 当前章落点：`context.insert(item)` 只是登记“这条记录应该被纳入持久化系统”，还没真正写盘。
+
+- `save()`
+  - 解决的问题：把当前上下文里的新增、修改、删除一起提交到底层 store。
+  - 当前章落点：如果你漏掉它，同进程里有时看起来还能读到对象，但重建容器后往往就消失了。
+
+- `delete(_:)`
+  - 解决的问题：把某个模型对象标记为删除。
+  - 当前章落点：和 `insert` 一样，它只是当前上下文里的变更登记，真正持久化仍然依赖 `save()`。
+
 这里最该记住的不是 API 名字，而是顺序：
 
 1. 先在上下文里做变更
@@ -655,6 +679,17 @@ func add(title: String) throws {
 
 这段代码的作用是创建一条新的本地待办并保存。
 
+这里最值得一起记住的其实是两步组合：
+
+1. `context.insert(item)`
+2. `try context.save()`
+
+也就是说，SwiftData 的最小新增闭环不是“构造对象就自动持久化”，而是：
+
+- 先创建对象
+- 再把它放进 `ModelContext`
+- 最后显式保存
+
 ### 3. 修改一条待办
 
 ```swift
@@ -676,6 +711,16 @@ func toggle(_ item: TodoItem) throws {
 
 这段代码的作用是切换一条待办的完成状态，并更新时间。
 
+这一段也刚好能帮助你区分：
+
+- `ModelContext` 负责跟踪对象变更
+- `save()` 负责让这些变更真正持久化
+
+所以修改动作的常见形状不是“重新构造一个新对象覆盖回去”，而往往是：
+
+- 直接改模型属性
+- 再 `save()`
+
 ### 4. 删除一条待办
 
 ```swift
@@ -695,6 +740,13 @@ func delete(_ item: TodoItem) throws {
 - `item`：要删除的待办对象
 
 这段代码的作用是从当前持久化系统中移除一条记录，并保存结果。
+
+这里重要的是它和第 43 章“删文件”完全不是一类动作：
+
+- 第 43 章删的是整个文件
+- 第 44 章删的是一条记录对象
+
+这也是为什么进入 SwiftData 后，操作粒度已经从“整份文件”升级到了“单条模型”。
 
 ## 现在回头看：这两轮验证各自在确认什么
 

@@ -268,6 +268,13 @@ func fetchUndoneTodos(in listName: String) throws -> [TodoItem] {
 - 作用：
   - 把“只读未完成且属于指定列表的待办”写成结构化条件
 
+这里特别值得记一句边界判断：
+
+- `#Predicate` 适合表达“持久化层听得懂的稳定条件”
+- 它不适合承接你自己临时写的任意 Swift 逻辑
+
+所以像 `item.isDone == false && item.list?.name == listName` 这种条件很合适；但如果你开始想把复杂打分函数、远端配置判断、UI 状态全塞进去，就说明这层边界已经开始错位。
+
 `FetchDescriptor(...)`
 
 - 参数：
@@ -333,6 +340,14 @@ func fetchUndoneTodos(in listName: String) throws -> [TodoItem] {
 
 - `priority` 决定主要先后顺序
 - `createdAt` 作为第二排序键，保证同优先级时列表仍然稳定
+
+`SortDescriptor`
+
+- 它解决的问题：让排序规则成为查询描述的一部分，而不是读取后再凭感觉补排序。
+- 本章常用形状：
+  - `SortDescriptor(\TodoItem.priority, order: .reverse)`
+  - `SortDescriptor(\TodoItem.createdAt, order: .forward)`
+- 当前章落点：第一个排序键定义主要顺序，第二个排序键负责打破并列，避免列表抖动。
 
 如果你少了第二排序键，列表看起来就可能“抖动”。这不是 UI 小毛病，而是读取规则没定义完整。
 
@@ -412,6 +427,12 @@ func fetchInboxTodos() throws -> [TodoItem] {
 - 待办项不删除
 - 这些待办回到“未归类”状态
 
+`deleteRule`
+
+- 它解决的问题：明确删除父对象时，子对象的命运应该是什么。
+- 本章常用形状：`@Relationship(deleteRule: .nullify, inverse: \TodoItem.list)`
+- 当前章落点：它不是“数据库参数调一调”，而是在把产品语义写进模型关系。
+
 为什么这里选 `nullify`？因为这个场景里，待办项本身通常仍然有意义。
 
 用户删掉的是“分类方式”，不一定是“任务本身”。
@@ -439,6 +460,15 @@ func fetchInboxTodos() throws -> [TodoItem] {
   - 作用：删除对象时把子对象关系置空
 - `deny`
   - 作用：当还有子对象存在时不允许删除父对象
+
+这三种规则的工程含义也可以顺手压成一句：
+
+- `.cascade`
+  - 父对象消失，子对象也不该再独立存在
+- `.nullify`
+  - 父对象消失，但子对象仍然有价值，只是回到未归类
+- `.deny`
+  - 先阻止删除，让调用方显式处理剩余子对象
 
 ## 4. 把查询、排序、关系串起来：一个真实读取需求长什么样
 
@@ -542,5 +572,3 @@ SwiftData 很适合处理下面这类本地数据问题：
 - 不讲复杂全文检索与搜索引擎式需求
 
 这些内容都很重要，但它们已经超出了“结构化读取与关系一致性”的入门范围。
-
-~~(一次性讲太多你们又听不懂)~~

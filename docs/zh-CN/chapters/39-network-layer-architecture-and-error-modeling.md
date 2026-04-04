@@ -21,6 +21,12 @@
 
 本章会作为后续鉴权（第 40 章）、更完整 HTTP 场景（第 41 章）等内容的共同网络基础。从本章开始，后续章节如果要补 `Header`、`query`、`timeout`、`download` 等能力，应默认在这套 `Endpoint -> URLRequest -> NetworkClient -> DTO` 契约上增量扩展，而不是各自重定义核心角色。
 
+## 本章对应资源
+
+- 文稿：`docs/zh-CN/chapters/39-network-layer-architecture-and-error-modeling.md`
+- 示例项目：`demos/projects/39-network-layer-architecture-and-error-modeling`
+- 配套本地服务：`teaching-api/`
+
 ## 本章怎么读
 
 这一章可以按三步读：
@@ -583,3 +589,26 @@ do {
 ```
 
 这就是“错误建模”的直接收益：失败路径不再是一个黑盒。
+
+## 常见误区
+
+- 把所有逻辑都塞进 `NetworkClient`，最后让它同时负责 endpoint 选择、业务判断、错误提示和 DTO 解释
+- 把 `Endpoint` 做成“万能对象”，把重试、鉴权、缓存、业务字段全提前塞进去
+- 以为“有了一层封装就叫分层”，但调用方仍然在手写 URL、查状态码和解码
+
+## Demo 里应该观察什么
+
+- `Endpoint.swift` 只描述请求，不负责发送
+- `NetworkClient.swift` 统一处理发送、状态码和解码
+- 同一个 `NetworkError` 如何把状态码错误和解码错误分开
+- `main.swift` 已经开始变短，主要在表达“我要什么接口、要什么 DTO”
+
+## 边界说明
+
+为了让第 39 章保持“最小但稳定”，这里明确不做这些事：
+
+- 不讲鉴权续期、自动刷新 token
+- 不讲下载、上传、分页和超时这些更完整的 HTTP 能力
+- 不讲通用拦截器链、重试策略和日志中间件
+
+这些能力会在第 40、41 章继续接回同一条主线，而不是另起一套网络层。

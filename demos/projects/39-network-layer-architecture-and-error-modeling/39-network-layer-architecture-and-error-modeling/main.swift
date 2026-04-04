@@ -2,167 +2,13 @@
 //  main.swift
 //  39-network-layer-architecture-and-error-modeling
 //
-//  Created by Codex on 2026/3/31.
+//  Created by Codex on 2026/4/4.
 //
 
 import Foundation
 
-enum APIConfig {
-    static let baseURL = URL(string: "http://127.0.0.1:3456")!
-}
-
-enum HTTPMethod: String {
-    case get = "GET"
-    case post = "POST"
-}
-
-struct Endpoint {
-    var path: String
-    var method: HTTPMethod
-    var queryItems: [URLQueryItem] = []
-    var headers: [String: String] = [:]
-    var body: Data? = nil
-}
-
-struct TodoDTO: Decodable {
-    let userId: Int
-    let id: Int
-    let title: String
-    let completed: Bool
-}
-
-struct CreateStudyRecordRequestDTO: Encodable {
-    let chapter: Int
-    let title: String
-    let durationMinutes: Int
-}
-
-struct StudyRecordResponseDTO: Decodable {
-    let id: Int
-    let chapter: Int
-    let title: String
-    let durationMinutes: Int
-    let status: String
-}
-
-enum NetworkError: Error {
-    case urlConstructionFailed
-    case requestBodyEncodingFailed(underlying: Error)
-    case transportFailed(underlying: Error)
-    case nonHTTPResponse
-    case badStatusCode(code: Int, body: Data?)
-    case decodingFailed(underlying: Error, body: Data)
-}
-
-extension Endpoint {
-    func makeRequest(baseURL: URL) throws -> URLRequest {
-        guard var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false) else {
-            throw NetworkError.urlConstructionFailed
-        }
-
-        let normalizedPath = path.hasPrefix("/") ? path : "/" + path
-        let basePath = components.path.hasSuffix("/") ? String(components.path.dropLast()) : components.path
-        components.path = basePath + normalizedPath
-
-        if !queryItems.isEmpty {
-            components.queryItems = queryItems
-        }
-
-        guard let url = components.url else {
-            throw NetworkError.urlConstructionFailed
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = method.rawValue
-
-        for (key, value) in headers {
-            request.setValue(value, forHTTPHeaderField: key)
-        }
-
-        request.httpBody = body
-        return request
-    }
-
-    static func todoDetail(id: Int) -> Endpoint {
-        Endpoint(path: "/todos/\(id)", method: .get)
-    }
-
-    static func todoList(limit: Int) -> Endpoint {
-        Endpoint(
-            path: "/todos",
-            method: .get,
-            queryItems: [URLQueryItem(name: "limit", value: String(limit))]
-        )
-    }
-
-    static func createStudyRecord(_ input: CreateStudyRecordRequestDTO) throws -> Endpoint {
-        do {
-            let body = try JSONEncoder().encode(input)
-            return Endpoint(
-                path: "/study-records",
-                method: .post,
-                headers: ["Content-Type": "application/json"],
-                body: body
-            )
-        } catch {
-            throw NetworkError.requestBodyEncodingFailed(underlying: error)
-        }
-    }
-
-    static func badTodoJSON() -> Endpoint {
-        Endpoint(path: "/diagnostics/bad-todo-json", method: .get)
-    }
-
-    static func serverError() -> Endpoint {
-        Endpoint(path: "/diagnostics/server-error", method: .get)
-    }
-}
-
-struct NetworkClient {
-    let baseURL: URL
-    let session: URLSession
-    let decoder: JSONDecoder
-
-    init(baseURL: URL, session: URLSession = .shared, decoder: JSONDecoder = JSONDecoder()) {
-        self.baseURL = baseURL
-        self.session = session
-        self.decoder = decoder
-    }
-
-    func send<T: Decodable>(_ endpoint: Endpoint, as type: T.Type) async throws -> T {
-        let request = try endpoint.makeRequest(baseURL: baseURL)
-        return try await send(request, as: type)
-    }
-
-    func send<T: Decodable>(_ request: URLRequest, as type: T.Type) async throws -> T {
-        let data: Data
-        let response: URLResponse
-
-        do {
-            (data, response) = try await session.data(for: request)
-        } catch {
-            throw NetworkError.transportFailed(underlying: error)
-        }
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.nonHTTPResponse
-        }
-
-        guard (200...299).contains(httpResponse.statusCode) else {
-            throw NetworkError.badStatusCode(code: httpResponse.statusCode, body: data)
-        }
-
-        do {
-            return try decoder.decode(T.self, from: data)
-        } catch {
-            throw NetworkError.decodingFailed(underlying: error, body: data)
-        }
-    }
-}
-
 func printDivider(_ title: String) {
-    print("")
-    print("======== \(title) ========")
+    print("\n======== \(title) ========")
 }
 
 func printTodo(_ todo: TodoDTO) {
@@ -212,73 +58,63 @@ func printError(_ error: Error) {
     }
 }
 
+func printStageHeader(endpoint: Endpoint, expectation: String) {
+    let request = try? endpoint.makeRequest(baseURL: APIConfig.baseURL)
+    print("期望：\(expectation)")
+    print("方法：\(endpoint.method.rawValue)")
+    print("URL：\(request?.url?.absoluteString ?? "<invalid>")")
+}
+
 func runDemo() async {
     let client = NetworkClient(baseURL: APIConfig.baseURL)
 
-    printDivider("沿用第 38 章能力，但不再复制粘贴请求代码")
+    printDivider("成功 GET：调用方只关心 endpoint 和 DTO")
     do {
-        let detail: TodoDTO = try await client.send(.todoDetail(id: 1), as: TodoDTO.self)
-        let list: [TodoDTO] = try await client.send(.todoList(limit: 3), as: [TodoDTO].self)
-
-        print("详情接口：")
+        let endpoint = Endpoint.todoDetail(id: 1)
+        printStageHeader(endpoint: endpoint, expectation: "成功解码单个 TodoDTO")
+        let detail: TodoDTO = try await client.send(endpoint, as: TodoDTO.self)
         printTodo(detail)
-        print("")
-        print("列表接口：")
-        for todo in list {
-            print("- \(todo.id) / \(todo.title)")
-        }
     } catch {
         printError(error)
     }
 
-    printDivider("POST 也走同一套模型")
+    printDivider("成功 POST：同一套客户端负责请求体编码后的发送")
     do {
         let input = CreateStudyRecordRequestDTO(
             chapter: 39,
-            title: "把单接口请求函数升级成 NetworkClient",
+            title: "把请求结构收口到 Endpoint + NetworkClient",
             durationMinutes: 30
         )
-
-        let record: StudyRecordResponseDTO = try await client.send(
-            try .createStudyRecord(input),
-            as: StudyRecordResponseDTO.self
-        )
+        let endpoint = try Endpoint.createStudyRecord(input)
+        printStageHeader(endpoint: endpoint, expectation: "成功解码 StudyRecordResponseDTO")
+        let record: StudyRecordResponseDTO = try await client.send(endpoint, as: StudyRecordResponseDTO.self)
         printStudyRecord(record)
     } catch {
         printError(error)
     }
 
-    printDivider("状态码错误：找不到任务")
+    printDivider("状态码错误：失败发生在 transport 之后、decode 之前")
     do {
-        let _: TodoDTO = try await client.send(.todoDetail(id: 999), as: TodoDTO.self)
+        let endpoint = Endpoint.todoDetail(id: 999)
+        printStageHeader(endpoint: endpoint, expectation: "触发 badStatusCode")
+        let _: TodoDTO = try await client.send(endpoint, as: TodoDTO.self)
     } catch {
         printError(error)
     }
 
-    printDivider("解码错误：接口返回的 JSON 结构不匹配")
+    printDivider("解码错误：请求成功，但 DTO 结构不匹配")
     do {
-        let _: TodoDTO = try await client.send(.badTodoJSON(), as: TodoDTO.self)
+        let endpoint = Endpoint.badTodoJSON()
+        printStageHeader(endpoint: endpoint, expectation: "触发 decodingFailed")
+        let _: TodoDTO = try await client.send(endpoint, as: TodoDTO.self)
     } catch {
         printError(error)
     }
-
-    printDivider("服务端错误：统一从 NetworkClient 往外抛")
-    do {
-        let _: TodoDTO = try await client.send(.serverError(), as: TodoDTO.self)
-    } catch {
-        printError(error)
-    }
-
-    printDivider("这一章的收益")
-    print("调用方现在主要表达两件事：请求什么、解码成什么。")
-    print("URL 拼装、状态码检查、解码失败分类，都已经收口到 NetworkClient。")
 }
 
-let demoSemaphore = DispatchSemaphore(value: 0)
-
+let semaphore = DispatchSemaphore(value: 0)
 Task {
     await runDemo()
-    demoSemaphore.signal()
+    semaphore.signal()
 }
-
-demoSemaphore.wait()
+semaphore.wait()

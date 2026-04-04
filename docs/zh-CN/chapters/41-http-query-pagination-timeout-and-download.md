@@ -25,6 +25,12 @@
 
 本章的“下载”只走到“拿到数据或临时文件 URL，并检查响应信息”；真正的落盘保存、目录选择与文件移动将放到第 `42` 章展开。
 
+## 本章对应资源
+
+- 文稿：`docs/zh-CN/chapters/41-http-query-pagination-timeout-and-download.md`
+- 示例项目：`demos/projects/41-http-query-pagination-timeout-and-download`
+- 配套本地服务：`teaching-api/`
+
 ## 本章怎么读
 
 这一章最好按“差异点”来读，不要只背 API：
@@ -487,6 +493,29 @@ print("Content-Type:", contentType ?? "<none>")
 - 断点续传、后台下载、下载进度回调
 
 把请求描述和响应处理的差异放对位置，就已经足够给后面的章节铺路了。
+
+## 常见误区 / 排错顺序 / Demo 里应该观察什么
+
+常见误区：
+
+- 把查询条件继续拼进字符串里，而不是交给 `URLComponents` / `queryItems`
+- 把分页看成“只是多两个参数”，却忽略响应结构也一起变了
+- 把 timeout 当成一种状态码错误，而不是 transport 失败
+- 继续用 JSON 解码思路处理下载结果
+
+排错顺序建议固定成这样：
+
+1. 先打印最终 URL，确认 query 是否真的拼进去了
+2. 再确认分页元信息是否和列表项一起解码
+3. 超时场景先看 transport error，不要先怀疑服务端状态码
+4. 下载场景先看响应头、临时文件 URL 和内容类型，再决定后续落盘策略
+
+Demo 里应该重点观察：
+
+- `Endpoint.swift` 里 query、timeout 和 auth 都是请求描述的一部分
+- `NetworkClient.swift` 继续服务 JSON 请求
+- `DownloadClient.swift` 单独承接下载路径，而不是硬塞进 `Decodable` 主线
+- `main.swift` 会直接打印最终 URL、分页元信息和下载临时文件位置
 
 ## 边界说明（本章明确不做什么）
 

@@ -22,6 +22,11 @@
 
 本章会把前几章出现过的网络、快照缓存、SwiftData 记录存储与结构化读取这些素材，整理成“可替换依赖”的形式，帮助你为后续测试与维护打基础。
 
+## 本章对应资源
+
+- 文稿：`docs/zh-CN/chapters/46-protocol-abstraction-dependency-injection-and-testability.md`
+- 示例项目：`demos/projects/46-protocol-abstraction-dependency-injection-and-testability`
+
 ## 本章怎么读
 
 这一章可以分三遍读：
@@ -384,6 +389,22 @@ final class ArticleServiceTests: XCTestCase {
 - 你可以更容易地把“可测性”落地为实际的替身实现，而不是停留在口号。
 
 后续如果本书继续展开测试或更完整的 App 组织方式，你至少已经具备一个共同前提：**代码结构允许你替换依赖**。
+
+## Demo 里应该观察什么
+
+第 46 章 demo 不单纯是“把协议写出来”，而是要让你直接看到三件事：
+
+1. 真实实现路径可以正常工作
+2. fake / stub 路径不依赖真实网络和真实落盘也能跑通主流程
+3. cache hit / miss / corrupted 三种分支可以在业务层被稳定验证
+
+如果你能从 demo 输出里看懂“为什么这里能不用真实依赖也把流程走完”，就已经抓住本章最核心的价值了。
+
+## 常见误区
+
+- 协议不由使用方定义，而是先做一个“万能抽象”，最后谁都不好用
+- 依赖注入只是把参数变多了，但业务类型内部仍然偷偷 new 真实依赖
+- 把 fake、stub、spy 混成一个概念，导致替身实现目标不清楚
 
 ## 边界说明
 

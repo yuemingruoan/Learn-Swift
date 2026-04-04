@@ -11,13 +11,13 @@ import SwiftData
 struct StudyPlanStore {
     let context: ModelContext
 
-    func replaceStoredPlan(with dto: StudyPlanDTO) throws {
+    func replaceStoredPlan(with dto: StudyPlanDTO, syncedAt: Date = .now) throws {
         let existingPlans = try context.fetch(FetchDescriptor<StudyPlanRecord>())
         for plan in existingPlans {
             context.delete(plan)
         }
 
-        let record = StudyPlanMapper.makeRecord(from: dto)
+        let record = StudyPlanMapper.makeRecord(from: dto, syncedAt: syncedAt)
         context.insert(record)
         try context.save()
     }

@@ -52,6 +52,10 @@ func runDemo() {
         print("Documents: \(dirs.documents.absoluteString)")
         print("Caches:    \(dirs.caches.absoluteString)")
         print("tmp:       \(dirs.temp.absoluteString)")
+        print("目录选择判断：")
+        print("- Documents 适合用户需要保留、可能会查看的文件")
+        print("- Caches 适合可重建的缓存")
+        print("- tmp 适合演示、临时文件和随时可删的数据")
 
         printDivider("准备演示目录")
         let demoRoot = dirs.temp
@@ -71,6 +75,7 @@ func runDemo() {
         let readBackText = try String(contentsOf: noteFileURL, encoding: .utf8)
 
         print("文件：\(noteFileURL.lastPathComponent)")
+        print("为什么用 String：这类文本内容直接按 UTF-8 读写最直观。")
         print("读回内容：")
         print(readBackText)
 
@@ -82,6 +87,7 @@ func runDemo() {
         let readBackData = try Data(contentsOf: binaryFileURL)
 
         print("文件：\(binaryFileURL.lastPathComponent)")
+        print("为什么用 Data：二进制内容不应该先绕成 String。")
         print("字节数：\(readBackData.count)")
         print("UTF-8 解释：\(String(decoding: readBackData, as: UTF8.self))")
 
@@ -96,6 +102,7 @@ func runDemo() {
 
         try jsonText.write(to: jsonFileURL, atomically: true, encoding: .utf8)
         let readBackJSON = try String(contentsOf: jsonFileURL, encoding: .utf8)
+        print("为什么这一步重要：下一章会把这种 JSON 文本继续升级成 Codable 快照缓存。")
         print(readBackJSON)
 
         printDivider("文件缺失分支")
@@ -105,6 +112,11 @@ func runDemo() {
         } else {
             print("file not found: \(missingFileURL.lastPathComponent)")
         }
+
+        printDivider("URL、路径、对象类型一起回看")
+        print("URL 用来描述位置：\(jsonFileURL.absoluteString)")
+        print("path 只是字符串形式的本地路径：\(jsonFileURL.path)")
+        print("对象类型选择：文本 -> String，原始字节 -> Data，文件位置 -> URL")
 
         printDivider("Demo 完成")
         print("演示根目录：\(demoRoot.path)")

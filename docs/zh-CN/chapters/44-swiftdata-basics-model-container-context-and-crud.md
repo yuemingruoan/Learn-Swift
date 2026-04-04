@@ -18,6 +18,11 @@
 - 区分“SwiftData 核心概念”和“项目里为了组织代码而加的一层 store”
 - 理解这套最小 CRUD 闭环的边界：它解决了“能保存”，但还没覆盖“怎么读更合理”
 
+## 本章对应资源
+
+- 文稿：`docs/zh-CN/chapters/44-swiftdata-basics-model-container-context-and-crud.md`
+- 示例项目：`demos/projects/44-swiftdata-basics-model-container-context-and-crud`
+
 ## 这一章在解决什么开发问题
 
 第 43 章里，本地数据只是“远程返回的一份待办快照”。
@@ -748,6 +753,21 @@ func delete(_ item: TodoItem) throws {
 你在终端里看到的每一轮输出，应该都能回答一个问题：
 
 - 现在这一步是在验证插入、修改、删除，还是在验证持久化是否真的完成
+
+## 常见误区 / 排错顺序
+
+常见误区：
+
+- 以为 `@Model` 就等于“数据库本身”，看不清容器和上下文各自负责什么
+- 在一个 context 里改完就直接宣布“持久化成功”，却没有重建容器验证
+- 把 SwiftData 原生概念和教程里的 `TodoStore` 组织层混在一起
+
+排错顺序建议固定成这样：
+
+1. 先看 `ModelContainer` 是否成功创建
+2. 再看 `ModelContext` 是否真的执行了 `insert / delete / save`
+3. 再看 fetch 结果是否符合当前 context 内的变更
+4. 最后重建容器，再读一遍确认数据真的落盘
 
 ## 本章的边界：为什么只会 CRUD 还不够
 

@@ -22,6 +22,25 @@
 
 本章以控制台项目视角为主，重点放在请求头（Header）与身份如何随请求一起被发送。
 
+## 本章对应资源
+
+- 文稿：`docs/zh-CN/chapters/40-authentication-headers-and-session-continuity.md`
+- 示例项目：`demos/projects/40-authentication-headers-and-session-continuity`
+- 配套本地服务：`teaching-api/`
+
+## 本章怎么读
+
+建议按下面顺序读：
+
+1. 先只抓身份信息落点
+- 搞清 Bearer Token 和 Cookie 最终都落在请求构造阶段，而不是 DTO 里
+
+2. 再看状态怎么延续
+- 读懂登录成功之后，本地到底保存了什么，以及后续请求如何继续带它
+
+3. 最后再看错误分支
+- 把 401 和 403 分开理解，而不是一律当成“请求失败”
+
 ### 在请求中传递身份
 
 在第 38 章，我们已经熟悉了把请求发出去、拿到响应、检查状态码、解 JSON 这一整条流程
@@ -333,6 +352,28 @@ extension Endpoint {
 
 - 这些能力本质上仍然发生在“构造请求 / 发送请求 / 读取响应”的链路上
 - 只要你把每一类变化放在合适的位置，网络层就不会越写越乱
+
+## 常见误区 / 排错顺序 / Demo 里应该观察什么
+
+常见误区：
+
+- 把 token 塞进 DTO 或每个请求函数参数里，结果身份信息散得到处都是
+- 只判断“请求失败了”，却不区分 401 和 403
+- 以为 Cookie 模式就完全没有客户端代码职责，结果看不清登录态到底如何延续
+
+排错顺序建议固定成这样：
+
+1. 先确认登录接口有没有返回 token 或 `Set-Cookie`
+2. 再确认本地 `AuthState` 是否真的保存了需要的身份材料
+3. 再看请求构造阶段是否写入了 `Authorization` 或 `Cookie`
+4. 最后才区分是未认证（401）还是无权限（403）
+
+Demo 里应该重点观察：
+
+- `AuthState.swift` 只负责保存登录态，不直接发请求
+- `AuthRequestDecorator.swift` 只负责把身份写进 `URLRequest`
+- `AuthenticatedNetworkClient.swift` 继续负责统一发送和错误分支
+- `main.swift` 现在能清楚演示“未登录 -> 登录 -> 继续带身份 -> 401 清理 -> 403 权限不足”这条完整链路
 
 ## 边界说明
 

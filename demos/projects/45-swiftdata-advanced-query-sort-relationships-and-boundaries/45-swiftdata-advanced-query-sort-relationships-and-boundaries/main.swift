@@ -102,22 +102,41 @@ struct TodoStore {
     }
 }
 
-func makeContainer() throws -> ModelContainer {
-    try ModelContainer(for: TodoList.self, TodoItem.self)
+enum DemoPaths {
+    static func storeURL() throws -> URL {
+        let fm = FileManager.default
+        let caches = try fm.url(
+            for: .cachesDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )
+
+        let folder = caches
+            .appendingPathComponent("learn-swift", isDirectory: true)
+            .appendingPathComponent("45-swiftdata-demo", isDirectory: true)
+
+        try fm.createDirectory(at: folder, withIntermediateDirectories: true)
+        return folder.appendingPathComponent("todos.store")
+    }
+
+    static func cleanStoreFiles(at storeURL: URL) {
+        let fm = FileManager.default
+        let candidates = [
+            storeURL,
+            URL(fileURLWithPath: storeURL.path + "-shm"),
+            URL(fileURLWithPath: storeURL.path + "-wal")
+        ]
+
+        for url in candidates where fm.fileExists(atPath: url.path) {
+            try? fm.removeItem(at: url)
+        }
+    }
 }
 
-func resetStore(context: ModelContext) throws {
-    let todoItems = try context.fetch(FetchDescriptor<TodoItem>())
-    for item in todoItems {
-        context.delete(item)
-    }
-
-    let todoLists = try context.fetch(FetchDescriptor<TodoList>())
-    for list in todoLists {
-        context.delete(list)
-    }
-
-    try context.save()
+func makeContainer(storeURL: URL) throws -> ModelContainer {
+    let configuration = ModelConfiguration(url: storeURL)
+    return try ModelContainer(for: TodoList.self, TodoItem.self, configurations: configuration)
 }
 
 func printDivider(_ title: String) {
@@ -139,13 +158,14 @@ func printTodos(_ items: [TodoItem]) {
 
 func runDemo() {
     do {
-        printDivider("准备阶段")
-        let setupContainer = try makeContainer()
-        let setupContext = ModelContext(setupContainer)
-        try resetStore(context: setupContext)
-        print("已清空旧数据，确保演示从空库开始")
+        let storeURL = try DemoPaths.storeURL()
 
-        let container = try makeContainer()
+        printDivider("准备阶段")
+        DemoPaths.cleanStoreFiles(at: storeURL)
+        print("SwiftData store 文件：\(storeURL.path)")
+        print("已清理旧 store，确保演示从空库开始")
+
+        let container = try makeContainer(storeURL: storeURL)
         let context = ModelContext(container)
         let store = TodoStore(context: context)
 

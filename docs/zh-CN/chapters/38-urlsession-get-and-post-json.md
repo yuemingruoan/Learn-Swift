@@ -145,6 +145,8 @@ func fetchTodo() async throws -> TodoDTO {
 5. 检查状态码是否处于成功区间
 6. 最后把响应 JSON 解码成 `TodoDTO`
 
+<a id="urlsession-shared-data-from-basics"></a>
+
 ### 2. `URLSession.shared.data(from:)` 是做什么的
 
 这一句：

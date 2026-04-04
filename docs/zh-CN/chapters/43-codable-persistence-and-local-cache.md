@@ -224,6 +224,8 @@ enum AppPaths {
 - 为什么缓存放 `Caches`
 - 为什么缓存文件位置要统一收口到一个函数里
 
+<a id="jsonencoder-encode-cache"></a>
+
 ### 2. 保存快照：编码 + 原子写入
 
 ```swift
@@ -269,6 +271,8 @@ func saveSnapshot<T: Encodable>(_ value: T, to fileURL: URL) throws {
 - `fileURL`：目标文件位置
 
 这段代码的作用是把内存中的快照编码成 JSON，并原子写入磁盘。
+
+<a id="jsondecoder-decode-cache"></a>
 
 ### 3. 读取快照：缺失是 `nil`，损坏是错误
 

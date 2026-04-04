@@ -370,7 +370,7 @@ static func makeContainer(at storeURL: URL) throws -> ModelContainer
 - 用配置对象描述“这套数据系统应该怎么落到磁盘”
 - 创建真正的 SwiftData 容器，让后续 `ModelContext` 可以依附其上工作
 
-这里最值得建立的认知，是 `ModelConfiguration` 和 `ModelContainer` 不是一回事：
+这里需要澄清一个概念 `ModelConfiguration` 和 `ModelContainer` 不是一回事：
 
 - `ModelConfiguration` 更像“配置说明书”
 - `ModelContainer` 更像“真正运行起来的持久化系统”
@@ -381,11 +381,11 @@ static func makeContainer(at storeURL: URL) throws -> ModelContainer
 let configuration = ModelConfiguration(url: storeURL)
 ```
 
-按 Apple Developer 文档，`ModelConfiguration` 是“描述应用 schema 或特定模型组配置”的类型。放到当前代码里，它做的事情可以直接理解成：
+按 `Apple Developer` 文档，`ModelConfiguration` 是“描述应用 schema 或特定模型组配置”的类型。放到当前代码里，它做的事情可以直接理解成：
 
 - 把“数据存哪”这件事包装成一个 SwiftData 能理解的配置对象
 
-这一行里你至少要看懂两个点：
+这一行里需要要理解两个点：
 
 - `ModelConfiguration(url: storeURL)` 里的参数 `url`
   - 类型是 `URL`
@@ -402,7 +402,7 @@ let configuration = ModelConfiguration(url: storeURL)
 return try ModelContainer(for: TodoItem.self, configurations: configuration)
 ```
 
-按 Apple Developer 文档，`ModelContainer` 是“管理应用 schema 和模型存储配置的对象”。这里可以把它理解成：
+按 `Apple Developer` 文档，`ModelContainer` 是“管理应用 schema 和模型存储配置的对象”。这里可以把它理解成：
 
 - 它知道这套系统要管理哪些模型
 - 它知道这些模型背后连到哪份底层存储
@@ -565,7 +565,7 @@ struct TodoStore {
 }
 ```
 
-这一步解决的问题非常朴素：
+这一步解决的问题是：
 
 - 应用启动后，我怎么把当前本地已有的待办全部拿回来
 

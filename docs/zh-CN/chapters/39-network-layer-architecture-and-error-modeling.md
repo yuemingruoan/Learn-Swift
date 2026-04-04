@@ -342,6 +342,8 @@ extension Endpoint {
 
 所以我们把它归为网络层错误
 
+<a id="network-client-send-mainline"></a>
+
 ## 模块 4：`NetworkClient` 负责发送与统一处理
 
 现在我们把“真正发送”和“统一处理”放进一个 `NetworkClient`。它的职责边界是：

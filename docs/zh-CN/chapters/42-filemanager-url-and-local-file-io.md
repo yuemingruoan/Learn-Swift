@@ -295,6 +295,8 @@ let cachesURL = try fm.url(
 )
 ```
 
+<a id="filemanager-temporary-directory"></a>
+
 临时目录通常用 `FileManager.default.temporaryDirectory`：
 
 ```swift
@@ -317,6 +319,8 @@ let noteInFolderURL = folderURL.appendingPathComponent("note.txt")
 ```
 
 这里不要用字符串手写 `"/notes/note.txt"` 去拼接。`URL` 的 `appendingPathComponent` 会更稳健，也更符合“用类型表达意图”的风格。
+
+<a id="url-appending-path-component"></a>
 
 `appendingPathComponent(_:)`
 

@@ -84,18 +84,18 @@ final class ArticleService {
 }
 ```
 
-这里故意把依赖写死，是为了暴露耦合问题，不是为了再教一遍 Foundation API。文中的这些系统接口如果你想回看基础说明，可以直接回前面章节：
+这里故意把依赖写死，是为了暴露耦合问题。文中的这些系统接口如果你想回看基础说明，可以直接回前面章节：
 
 - `URLSession.shared.data(from:)`
-  - 见第 `39` 章网络层主线
+  - 见 [第 `38` 章 `URLSession.shared.data(from:)` 的基础说明](./38-urlsession-get-and-post-json.md#urlsession-shared-data-from-basics) 和 [第 `39` 章网络层主线](./39-network-layer-architecture-and-error-modeling.md#network-client-send-mainline)
 - `JSONDecoder().decode`
-  - 见第 `39` 章和第 `43` 章
+  - 见 [第 `39` 章网络层主线](./39-network-layer-architecture-and-error-modeling.md#network-client-send-mainline) 和 [第 `43` 章“读取快照：缺失是 `nil`，损坏是错误”](./43-codable-persistence-and-local-cache.md#jsondecoder-decode-cache)
 - `FileManager.default.temporaryDirectory`
-  - 见第 `42` 章
+  - 见 [第 `42` 章 `temporaryDirectory` 说明](./42-filemanager-url-and-local-file-io.md#filemanager-temporary-directory)
 - `.appendingPathComponent(...)`
-  - 见第 `42` 章
+  - 见 [第 `42` 章 URL 路径拼接说明](./42-filemanager-url-and-local-file-io.md#url-appending-path-component)
 - `JSONEncoder().encode`
-  - 见第 `43` 章
+  - 见 [第 `43` 章“保存快照：编码 + 原子写入”](./43-codable-persistence-and-local-cache.md#jsonencoder-encode-cache)
 
 这段代码的问题不是“写法不 Swift”，而是**耦合方式会让你很难做以下事情**：
 
@@ -113,7 +113,7 @@ final class ArticleService {
 
 ### 模块 2：协议抽象
 
-协议抽象最常见的坑，是一上来就想写一个“万能协议”。这一章走相反方向：**协议越小越好，职责越清楚越好**。
+协议抽象最常见的坑，是一上来就想写一个“万能协议”。~~(啥都做成协议等于没写)~~ 这一章走相反方向：**协议越小越好，职责越清楚越好**。
 
 一个实用的原则是：协议由使用方定义，它只表达使用方真正需要什么能力。举例来说，如果你的业务只需要“发请求得到 Data”，那协议就不要一上来定义“拦截器、重试、日志、缓存策略”等等。
 
@@ -243,7 +243,7 @@ final class ArticleService {
 - 真实实现：用于产品运行（例如 `URLSession` 网络实现、文件缓存实现、SwiftData 存储实现）。
 - 替身实现：用于测试或预览（例如 stub/fake/spy）。
 
-下面给一组很直给的实现示例，细节故意压得比较少：
+下面给一组直观的实现示例，细节故意压得比较少：
 
 ```swift
 import Foundation
@@ -313,7 +313,7 @@ final class StubArticleRemoteSource: ArticleRemoteSource {
 
 ### 模块 5：可测试设计（把可替换落到可验证）
 
-本章想落到地上的可测试性，不是把 XCTest 从头讲一遍，而是把一个更关键的因果关系讲明白：
+本章目标是实现的可测试性，不是把 XCTest 从头讲一遍，而是把一个更关键的因果关系讲明白：
 
 - 当你的业务逻辑只依赖协议时，你就能用替身实现把测试从“真实世界”解耦出来。
 
@@ -368,7 +368,7 @@ final class ArticleServiceTests: XCTestCase {
 - 你抽象不出稳定边界：协议里充满“先放着以后可能用”的方法，说明你还不清楚真正的职责。
 - 为了“通用”而通用：协议设计成一堆泛型、类型擦除、万能参数，最后调用方更难用，测试也更难写。
 
-一个很好用的“止损点”是：**当抽象让你更难写调用代码或更难写测试时，先停下来**。抽象的目的从来不是增加层数，而是减少不必要的耦合。
+一个常用的“止损点”是：**当抽象让你更难写调用代码或更难写测试时，先停下来**。抽象的目的从来不是增加层数，而是减少不必要的耦合。
 
 ### 模块 7：阶段收束（把第 39-45 章的素材串起来）
 
@@ -387,7 +387,7 @@ final class ArticleServiceTests: XCTestCase {
 
 ## 边界说明
 
-为了避免本章变成“大型架构模式大全”，这里明确本章不覆盖的内容：
+为了避免本章变成“大型架构模式大全”，本章不覆盖以下内容：
 
 - 不引入 DI 框架或容器，不讨论 Service Locator 等更复杂的组织方式。
 - 不系统讲解 MVC/MVVM/Clean Architecture 等架构流派；本章只关注语言层面的“协议边界 + 注入点 + 替身实现”。

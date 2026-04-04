@@ -8,10 +8,13 @@
 import Foundation
 import SwiftData
 
+// 这里开始引入第二个模型，目的是把“关系、筛选、删除规则”讲清楚。
 @Model
 final class TodoList {
     var name: String
 
+    // 删除列表时使用 `.nullify`：
+    // 列表被删掉，但待办不跟着删，而是回到“未归类”状态。
     @Relationship(deleteRule: .nullify, inverse: \TodoItem.list)
     var items: [TodoItem] = []
 
@@ -46,6 +49,7 @@ final class TodoItem {
     }
 }
 
+// 这一层继续作为“存储入口”存在，让 demo 的读取需求更接近文稿里的描述方式。
 struct TodoStore {
     let context: ModelContext
 
@@ -63,6 +67,7 @@ struct TodoStore {
     }
 
     func fetchAllTodos() throws -> [TodoItem] {
+        // 先给一个最朴素的稳定顺序，方便观察初始数据。
         let descriptor = FetchDescriptor<TodoItem>(
             sortBy: [SortDescriptor(\TodoItem.createdAt, order: .forward)]
         )
@@ -70,6 +75,8 @@ struct TodoStore {
     }
 
     func fetchUndoneTodos(in listName: String) throws -> [TodoItem] {
+        // `#Predicate` 负责筛选“读哪些”，
+        // `SortDescriptor` 负责定义“按什么顺序返回”。
         let predicate = #Predicate<TodoItem> { item in
             item.isDone == false && item.list?.name == listName
         }
@@ -85,6 +92,7 @@ struct TodoStore {
     }
 
     func fetchInboxTodos() throws -> [TodoItem] {
+        // 这里把“未归类”明确建模成 `list == nil`。
         let predicate = #Predicate<TodoItem> { item in
             item.list == nil
         }
@@ -121,6 +129,7 @@ enum DemoPaths {
     }
 
     static func cleanStoreFiles(at storeURL: URL) {
+        // 避免和其他 SwiftData demo 共享默认 store，保证关系 schema 独立。
         let fm = FileManager.default
         let candidates = [
             storeURL,
@@ -135,6 +144,7 @@ enum DemoPaths {
 }
 
 func makeContainer(storeURL: URL) throws -> ModelContainer {
+    // 这里显式传入两个模型类型，因为这章已经进入“列表 + 待办”的关系场景。
     let configuration = ModelConfiguration(url: storeURL)
     return try ModelContainer(for: TodoList.self, TodoItem.self, configurations: configuration)
 }
@@ -165,11 +175,14 @@ func runDemo() {
         print("SwiftData store 文件：\(storeURL.path)")
         print("已清理旧 store，确保演示从空库开始")
 
+        // 本章还是同一条主线：
+        // 先有 `ModelContainer`，再有承接读写的 `ModelContext`。
         let container = try makeContainer(storeURL: storeURL)
         let context = ModelContext(container)
         let store = TodoStore(context: context)
 
         printDivider("创建列表与待办")
+        // 先准备两个列表，再准备一个未归类待办，方便后面观察 `nullify`。
         let today = try store.addList(name: "Today")
         let work = try store.addList(name: "Work")
 
@@ -191,6 +204,7 @@ func runDemo() {
         printTodos(inboxBeforeDelete)
 
         printDivider("删除 Today 列表，观察 nullify 结果")
+        // 删除父对象后，不是把子对象也删掉，而是让它们回到 `list == nil`。
         try store.deleteList(today)
         let todayAfterDelete = try store.fetchUndoneTodos(in: "Today")
         let inboxAfterDelete = try store.fetchInboxTodos()

@@ -69,3 +69,5 @@ outline: false
 - [44. 从快照到记录：SwiftData 最小持久化闭环](/zh-CN/chapters/44-swiftdata-basics-model-container-context-and-crud)
 - [45. 结构化读取与关系一致性：筛选、排序、列表与删除规则](/zh-CN/chapters/45-swiftdata-advanced-query-sort-relationships-and-boundaries)
 - [46. 语言进阶：协议抽象、依赖注入与可测试设计](/zh-CN/chapters/46-protocol-abstraction-dependency-injection-and-testability)
+- [47. 工程化第一步：多文件协作、类型边界与项目拆分](/zh-CN/chapters/47-multi-file-project-organization-and-cross-file-collaboration)
+- [48. SwiftData 工程建模：DTO、持久化模型与领域边界](/zh-CN/chapters/48-swiftdata-engineering-modeling-dto-persistence-and-domain-boundaries)

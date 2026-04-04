@@ -4,8 +4,8 @@
 
 - 前置章节：[21. 协议：灵活抽象的第一步](./21-protocols-flexible-abstraction.md)、[24. 泛型：让同一套逻辑适配更多类型](./24-generics-reusable-abstractions.md)、[39. 网络层分层与错误建模](./39-network-layer-architecture-and-error-modeling.md)、[45. 结构化读取与关系一致性：筛选、排序、列表与删除规则](./45-swiftdata-advanced-query-sort-relationships-and-boundaries.md)
 - 上一章：[45. 结构化读取与关系一致性：筛选、排序、列表与删除规则](./45-swiftdata-advanced-query-sort-relationships-and-boundaries.md)
-- 建议下一章：待定（后续章节编排尚未确定）
-- 下一章：待定（后续章节编排尚未确定）
+- 建议下一章：[47. 工程化第一步：多文件协作、类型边界与项目拆分](./47-multi-file-project-organization-and-cross-file-collaboration.md)
+- 下一章：[47. 工程化第一步：多文件协作、类型边界与项目拆分](./47-multi-file-project-organization-and-cross-file-collaboration.md)
 - 适合谁先读：已经写过“能跑起来的网络请求/缓存/持久化代码”，但开始觉得它们难以复用、难以替换、难以测试的读者
 
 ## 本章目标

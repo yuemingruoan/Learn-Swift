@@ -76,7 +76,7 @@
 
 这三件事经常长得相似，但不应该被误认为是同一件事。
 
-## 先立一条总原则：不要让一个类型承担三种职责
+## 先立一条总则：不要让一个类型承担三种职责
 
 如果你把一个类型同时拿来做：
 
@@ -256,7 +256,7 @@ static func makeRecord(from dto: StudyPlanDTO, syncedAt: Date = .now) -> StudyPl
 }
 ```
 
-这一步做的事情，恰好很适合被明确收口：
+这一步做的事情：
 
 - 远程字段改名
 - 嵌套结构摊平
@@ -270,7 +270,7 @@ static func makeRecord(from dto: StudyPlanDTO, syncedAt: Date = .now) -> StudyPl
 
 ## `Record -> Domain` 映射：业务读取时到底做什么
 
-当数据已经成功保存后，业务层仍然不一定想直接拿 `StudyPlanRecord` 来用。
+即使数据已经成功保存了，业务层显然也不会想直接拿 `StudyPlanRecord` 来用。
 
 所以 demo 又定义了：
 
@@ -409,7 +409,7 @@ struct StudyPlanStore {
 3. 重建 `ModelContainer` 后还能读回 Record，说明这不是内存假象。
 4. 最终业务输出读的是 `StudyPlan`，而不是把 `StudyPlanRecord` 直接拿去全流程乱用。
 
-如果你能稳定回答下面这三个问题，这章就读通了：
+如果你能回答下面这三个问题，这章就读通了：
 
 - 这个字段属于接口、属于本地，还是属于业务推导？
 - 这个转换应该发生在导入时，还是读取时？

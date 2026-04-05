@@ -4,8 +4,8 @@
 
 - 前置章节：[35. JSON 进阶：字段映射与复杂结构](./35-json-advanced-field-mapping-and-nested-structures.md)、[43. 本地快照缓存：Codable、文件落盘与恢复路径](./43-codable-persistence-and-local-cache.md)、[44. 从快照到记录：SwiftData 最小持久化闭环](./44-swiftdata-basics-model-container-context-and-crud.md)、[45. 结构化读取与关系一致性：筛选、排序、列表与删除规则](./45-swiftdata-advanced-query-sort-relationships-and-boundaries.md)、[47. 工程化第一步：多文件协作、类型边界与项目拆分](./47-multi-file-project-organization-and-cross-file-collaboration.md)
 - 上一章：[47. 工程化第一步：多文件协作、类型边界与项目拆分](./47-multi-file-project-organization-and-cross-file-collaboration.md)
-- 建议下一章：待定
-- 下一章：待定
+- 建议下一章：[49. SwiftData 同步工程：增量更新、冲突处理与离线一致性](./49-swiftdata-sync-engineering-incremental-update-conflict-resolution-and-offline-consistency.md)
+- 下一章：[49. SwiftData 同步工程：增量更新、冲突处理与离线一致性](./49-swiftdata-sync-engineering-incremental-update-conflict-resolution-and-offline-consistency.md)
 - 适合谁先读：已经理解 SwiftData 的最小 CRUD，也已经开始把项目拆成多个文件；现在想知道真实工程里 DTO、SwiftData 模型和业务模型为什么不该混成一个类型的读者
 
 ## 本章目标

@@ -71,3 +71,4 @@ outline: false
 - [46. 语言进阶：协议抽象、依赖注入与可测试设计](/zh-CN/chapters/46-protocol-abstraction-dependency-injection-and-testability)
 - [47. 工程化第一步：多文件协作、类型边界与项目拆分](/zh-CN/chapters/47-multi-file-project-organization-and-cross-file-collaboration)
 - [48. SwiftData 工程建模：DTO、持久化模型与领域边界](/zh-CN/chapters/48-swiftdata-engineering-modeling-dto-persistence-and-domain-boundaries)
+- [49. SwiftData 同步工程：增量更新、冲突处理与离线一致性](/zh-CN/chapters/49-swiftdata-sync-engineering-incremental-update-conflict-resolution-and-offline-consistency)

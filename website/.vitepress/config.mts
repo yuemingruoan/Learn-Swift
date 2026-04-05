@@ -395,6 +395,7 @@ export default defineConfig({
         link: "/zh-CN/answers/08-optional-basics",
       },
     ],
+    socialLinks: [{ icon: "github", link: repositoryWebBase }],
     sidebar: createSidebarConfig(),
     search: {
       provider: "local",

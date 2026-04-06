@@ -70,3 +70,5 @@ website/docs/public/assets/
 website/docs/zh-CN/chapters/
 website/docs/zh-CN/answers/
 website/.vitepress/generated/
+
+.codex

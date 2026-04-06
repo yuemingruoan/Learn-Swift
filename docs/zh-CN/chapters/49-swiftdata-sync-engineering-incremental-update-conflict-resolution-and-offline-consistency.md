@@ -24,8 +24,6 @@
 
 - 文稿：`docs/zh-CN/chapters/49-swiftdata-sync-engineering-incremental-update-conflict-resolution-and-offline-consistency.md`
 - 示例项目：`demos/projects/49-swiftdata-sync-engineering-incremental-update-conflict-resolution-and-offline-consistency`
-- 练习 starter：`exercises/zh-CN/projects/49-swiftdata-sync-engineering-starter`
-- 练习答案：`exercises/zh-CN/answers/49-swiftdata-sync-engineering`
 
 ## 这一章要解决什么开发问题
 
@@ -1285,6 +1283,5 @@ struct StudyPlanSyncService {
 - 为什么这条记录的某些字段应该远程赢，某些字段必须本地保留，某些字段则必须进入冲突矩阵
 
 如果你心中对这个问题有了明确的答案，你的代码就不会只是一堆胡乱堆积起来的屎山。
-
 
 

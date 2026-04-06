@@ -52,4 +52,3 @@ outline: false
 - [33. 异步序列：AsyncSequence 与 AsyncStream 练习答案](/zh-CN/answers/33-asyncsequence-and-asyncstream)
 - [34. JSON 格式与解析 练习答案](/zh-CN/answers/34-json-format-and-parsing)
 - [35. JSON 进阶：字段映射与复杂结构 练习答案](/zh-CN/answers/35-json-advanced-field-mapping-and-nested-structures)
-- [49. SwiftData 同步工程：增量更新、冲突处理与离线一致性 练习答案](/zh-CN/answers/49-swiftdata-sync-engineering)

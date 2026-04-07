@@ -72,3 +72,6 @@ outline: false
 - [47. 工程化第一步：多文件协作、类型边界与项目拆分](/zh-CN/chapters/47-multi-file-project-organization-and-cross-file-collaboration)
 - [48. SwiftData 工程建模：DTO、持久化模型与领域边界](/zh-CN/chapters/48-swiftdata-engineering-modeling-dto-persistence-and-domain-boundaries)
 - [49. SwiftData 同步工程：增量更新、冲突处理与离线一致性](/zh-CN/chapters/49-swiftdata-sync-engineering-incremental-update-conflict-resolution-and-offline-consistency)
+- [50. Swift Testing 入门：从 XCTest 到 @Test、#expect 与第一批单元测试](/zh-CN/chapters/50-swift-testing-basics-from-xctest-to-test-expect-and-require)
+- [51. Swift Testing 组织与复用：Suite、参数化测试、Tag 与 Trait](/zh-CN/chapters/51-swift-testing-organization-parameterized-tags-and-traits)
+- [52. Swift Testing 工程实践：异步测试、依赖替身与从 XCTest 渐进迁移](/zh-CN/chapters/52-swift-testing-async-doubles-and-gradual-migration)

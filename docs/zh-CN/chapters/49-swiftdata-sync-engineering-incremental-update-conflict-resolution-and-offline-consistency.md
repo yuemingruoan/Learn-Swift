@@ -4,8 +4,8 @@
 
 - 前置章节：[39. 网络层分层与错误建模](./39-network-layer-architecture-and-error-modeling.md)、[43. 本地快照缓存：Codable、文件落盘与恢复路径](./43-codable-persistence-and-local-cache.md)、[46. 语言进阶：协议抽象、依赖注入与可测试设计](./46-protocol-abstraction-dependency-injection-and-testability.md)、[48. SwiftData 工程建模：DTO、持久化模型与领域边界](./48-swiftdata-engineering-modeling-dto-persistence-and-domain-boundaries.md)
 - 上一章：[48. SwiftData 工程建模：DTO、持久化模型与领域边界](./48-swiftdata-engineering-modeling-dto-persistence-and-domain-boundaries.md)
-- 建议下一章：待定
-- 下一章：待定
+- 建议下一章：[50. Swift Testing 入门：从 XCTest 到 @Test、#expect 与第一批单元测试](./50-swift-testing-basics-from-xctest-to-test-expect-and-require.md)
+- 下一章：[50. Swift Testing 入门：从 XCTest 到 @Test、#expect 与第一批单元测试](./50-swift-testing-basics-from-xctest-to-test-expect-and-require.md)
 - 适合谁先读：已经能把远程 DTO 保存成 SwiftData 记录，也已经开始思考“离线修改、本地备注、重复同步、远程删除”这些真实工程问题的读者
 
 ## 本章目标
@@ -1283,5 +1283,4 @@ struct StudyPlanSyncService {
 - 为什么这条记录的某些字段应该远程赢，某些字段必须本地保留，某些字段则必须进入冲突矩阵
 
 如果你心中对这个问题有了明确的答案，你的代码就不会只是一堆胡乱堆积起来的屎山。
-
 

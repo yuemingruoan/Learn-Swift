@@ -1246,6 +1246,14 @@ final class XCTestComparisonTests: XCTestCase {
 
 - `swiftTestingBasicsTests`
 
+如果你是第一次在 Xcode 里手动运行测试，最直接的入口就是顶部菜单：
+
+- `Product > Test`
+
+当然你也可以使用快捷键：`Command + U`来运行测试
+
+![Xcode 中通过 Product 菜单运行测试](../../../assets/shared/images/ch50-xcode-product-test-menu.png)
+
 #### 观察点 2：Swift Testing 和 XCTest 都会出现在测试列表里
 
 这正是本章要表达的并存现实。
@@ -1255,9 +1263,17 @@ final class XCTestComparisonTests: XCTestCase {
 - `SwiftTestingBasicsTests/...`
 - `XCTestComparisonTests...`
 
+当测试运行完成后，左侧测试导航区会出现通过状态，顶部也会给出 `Test Completed` 之类的结果提示。
+
+![Xcode 中测试通过后的结果状态](../../../assets/shared/images/ch50-xcode-test-succeeded.png)
+
 #### 观察点 3：失败信息不一样
 
 当 `#expect` 失败时，你会看到更贴近表达式的失败描述。
+
+例如下面这种场景里，断言写成了 `#expect(result == 6)`，而实际结果是 `5`，Xcode 会直接把失败表达式和当前值展示出来。
+
+![Xcode 中 Swift Testing 的失败断言提示](../../../assets/shared/images/ch50-xcode-test-failed-expectation.png)
 
 而 `XCTest` 往往更多表现为：
 

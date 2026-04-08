@@ -4,7 +4,7 @@
 
 - 前置章节：[29. 并发入门：async/await 与 Task](./29-concurrency-basics-async-await-and-task.md)、[32. 结构化并发：async let、TaskGroup 与父子任务](./32-structured-concurrency.md)、[46. 语言进阶：协议抽象、依赖注入与可测试设计](./46-protocol-abstraction-dependency-injection-and-testability.md)、[50. Swift Testing 入门：从 XCTest 到 @Test、#expect 与第一批单元测试](./50-swift-testing-basics-from-xctest-to-test-expect-and-require.md)、[51. Swift Testing 组织与复用：Suite、参数化测试、Tag 与 Trait](./51-swift-testing-organization-parameterized-tags-and-traits.md)
 - 上一章：[51. Swift Testing 组织与复用：Suite、参数化测试、Tag 与 Trait](./51-swift-testing-organization-parameterized-tags-and-traits.md)
-- 下一章：待定
+- 下一章：[53. Swift Package Manager 工程化入门：从多文件到多模块、Package.swift、Target 与 Product](./53-swift-package-manager-from-multi-file-to-multi-module.md)
 - 适合谁读：已经完整读过第 50、51 章，知道单元测试、断言、`@Test`、`#expect`、`#require` 的基础写法，也理解依赖注入与可测试设计，现在想把测试真正落到异步业务代码上的读者
 
 ## 本章目标

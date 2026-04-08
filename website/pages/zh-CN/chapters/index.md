@@ -75,3 +75,4 @@ outline: false
 - [50. Swift Testing 入门：从 XCTest 到 @Test、#expect 与第一批单元测试](/zh-CN/chapters/50-swift-testing-basics-from-xctest-to-test-expect-and-require)
 - [51. Swift Testing 组织与复用：Suite、参数化测试、Tag 与 Trait](/zh-CN/chapters/51-swift-testing-organization-parameterized-tags-and-traits)
 - [52. Swift Testing 工程实践：异步测试、依赖替身与从 XCTest 渐进迁移](/zh-CN/chapters/52-swift-testing-async-doubles-and-gradual-migration)
+- [53. Swift Package Manager 工程化入门：从多文件到多模块、Package.swift、Target 与 Product](/zh-CN/chapters/53-swift-package-manager-from-multi-file-to-multi-module)

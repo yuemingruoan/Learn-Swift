@@ -4,7 +4,7 @@
 
 - 前置章节：[03. Xcode 基础使用](./03-xcode-basics.md)、[46. 语言进阶：协议抽象、依赖注入与可测试设计](./46-protocol-abstraction-dependency-injection-and-testability.md)、[47. 工程化第一步：多文件协作、类型边界与项目拆分](./47-multi-file-project-organization-and-cross-file-collaboration.md)、[50. Swift Testing 入门：从 XCTest 到 @Test、#expect 与第一批单元测试](./50-swift-testing-basics-from-xctest-to-test-expect-and-require.md)、[52. Swift Testing 工程实践：异步测试、依赖替身与从 XCTest 渐进迁移](./52-swift-testing-async-doubles-and-gradual-migration.md)
 - 上一章：[52. Swift Testing 工程实践：异步测试、依赖替身与从 XCTest 渐进迁移](./52-swift-testing-async-doubles-and-gradual-migration.md)
-- 下一章：待定
+- 下一章：[54. 关联类型与不透明返回类型：`associatedtype` 与 `some`](./54-associated-types-and-opaque-return-types.md)
 - 适合谁读：已经理解“同一个 target 里多个 `.swift` 文件如何协作”，也知道测试 target、协议边界、依赖注入这些概念，现在开始想进一步理解“什么时候应该拆成多个 module / package”的读者
 
 ## 本章目标

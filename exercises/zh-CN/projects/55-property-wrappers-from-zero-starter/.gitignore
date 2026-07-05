@@ -1,0 +1,6 @@
+.build/
+.swiftpm/
+.codex-cache/
+*.xcodeproj/
+DerivedData/
+Package.resolved

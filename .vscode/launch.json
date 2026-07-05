@@ -1,0 +1,44 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:Learn-Swift}/demos/projects/56-result-builders-and-mini-dsl",
+            "name": "Debug HTMLDemo (demos/projects/56-result-builders-and-mini-dsl)",
+            "target": "HTMLDemo",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug HTMLDemo (demos/projects/56-result-builders-and-mini-dsl)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:Learn-Swift}/demos/projects/56-result-builders-and-mini-dsl",
+            "name": "Release HTMLDemo (demos/projects/56-result-builders-and-mini-dsl)",
+            "target": "HTMLDemo",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release HTMLDemo (demos/projects/56-result-builders-and-mini-dsl)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:Learn-Swift}/demos/projects/57-keypath-identifiable-and-mainactor",
+            "name": "Debug TaskDemo (demos/projects/57-keypath-identifiable-and-mainactor)",
+            "target": "TaskDemo",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug TaskDemo (demos/projects/57-keypath-identifiable-and-mainactor)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:Learn-Swift}/demos/projects/57-keypath-identifiable-and-mainactor",
+            "name": "Release TaskDemo (demos/projects/57-keypath-identifiable-and-mainactor)",
+            "target": "TaskDemo",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release TaskDemo (demos/projects/57-keypath-identifiable-and-mainactor)"
+        }
+    ]
+}
